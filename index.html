@@ -1,7 +1,6 @@
 ```html
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
 <meta charset="UTF-8">
@@ -16,7 +15,7 @@
 :root{
 --coffee:#2c1e16;
 --gold:#d4af37;
---bg:#f5f2ec;
+--bg:#f6f3ee;
 }
 
 body{
@@ -25,18 +24,9 @@ font-family:Arial;
 background:var(--bg);
 }
 
-.screen{
-display:none;
-min-height:100vh;
-}
+/* NAV */
 
-.active{
-display:block;
-}
-
-/* NAVBAR */
-
-.navbar{
+.nav{
 display:flex;
 justify-content:center;
 gap:40px;
@@ -46,22 +36,33 @@ border-bottom:3px solid var(--gold);
 font-weight:bold;
 }
 
-.navbar button{
-border:none;
+.nav button{
 background:none;
+border:none;
 font-size:16px;
 cursor:pointer;
 }
 
-/* HOME */
+/* PAGE */
 
-#home{
+.page{
+display:none;
+}
+
+.active{
+display:block;
+}
+
+/* HERO */
+
+.hero{
+height:90vh;
+
 display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
 text-align:center;
-height:80vh;
 
 background:
 linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.6)),
@@ -71,130 +72,187 @@ background-size:cover;
 color:white;
 }
 
-.start{
+.hero button{
 margin-top:30px;
 padding:18px 40px;
-background:var(--gold);
 border:none;
 border-radius:30px;
+background:var(--gold);
 font-size:18px;
-font-weight:bold;
 cursor:pointer;
 }
 
-/* CAFE LIST */
+/* PROJECT */
 
-.header{
+.project{
+padding:60px 25px;
 text-align:center;
-font-size:22px;
-padding:15px;
 }
 
-.cafe-list{
-padding:15px;
-}
-
-.card{
-display:flex;
-background:white;
-margin-bottom:15px;
+.project img{
+width:100%;
 border-radius:12px;
+margin-top:20px;
+}
+
+/* CAFE GRID */
+
+.cafe-grid{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:10px;
+
+padding:10px;
+
+}
+
+.cafe{
+
+height:50vh;
+
+background:white;
+
+border-radius:12px;
+
 overflow:hidden;
-box-shadow:0 4px 10px rgba(0,0,0,.08);
+
+box-shadow:0 4px 8px rgba(0,0,0,.1);
+
+display:flex;
+
+flex-direction:column;
+
 cursor:pointer;
+
 }
 
-.card img{
-width:40%;
+.cafe img{
+
+height:70%;
+
 object-fit:cover;
+
 }
 
-.card-info{
-padding:12px;
-}
+.cafe-name{
 
-.card-title{
+padding:10px;
+
 font-weight:bold;
-color:var(--coffee);
-font-size:18px;
-}
 
-.distance{
-font-size:14px;
-color:#777;
+text-align:center;
+
 }
 
 /* DETAIL */
 
-.big-banner{
+.banner{
+
 background:#fff6cc;
+
 text-align:center;
-padding:25px;
-font-size:34px;
+
+padding:30px;
+
+font-size:36px;
+
 font-weight:bold;
+
 border-bottom:4px solid var(--gold);
+
 }
 
 .point{
+
 background:var(--coffee);
-padding:30px;
+
 color:white;
+
+padding:30px;
+
 text-align:center;
+
 }
 
 .stamps{
+
 display:grid;
+
 grid-template-columns:repeat(5,1fr);
+
 gap:10px;
-max-width:320px;
+
+max-width:300px;
+
 margin:auto;
+
 margin-top:20px;
+
 }
 
 .stamp{
+
 aspect-ratio:1;
+
 border-radius:50%;
+
 border:2px dashed rgba(255,255,255,.4);
+
 display:flex;
+
 align-items:center;
+
 justify-content:center;
+
 }
 
 .stamped{
+
 background:var(--gold);
+
 border:none;
+
 color:var(--coffee);
+
 }
 
 .detail{
+
 padding:20px;
+
 }
 
 .images{
+
 display:flex;
+
 gap:10px;
+
 overflow-x:auto;
+
 }
 
 .images img{
+
 width:70%;
+
 border-radius:10px;
+
 }
 
 .menu li{
+
 display:flex;
+
 justify-content:space-between;
+
 padding:10px 0;
+
 border-bottom:1px dashed #ddd;
-}
 
-.qr{
-margin-top:20px;
-text-align:center;
-}
-
-button{
-cursor:pointer;
 }
 
 </style>
@@ -202,39 +260,56 @@ cursor:pointer;
 
 <body>
 
-<div class="navbar">
+<div class="nav">
 
-<button onclick="goHome()">Home</button>
+<button onclick="show('home')">Home</button>
 
-<button onclick="goCafe()">Cafes</button>
+<button onclick="show('cafes')">Cafes</button>
 
 </div>
 
 <!-- HOME -->
 
-<div id="home" class="screen active">
+<div id="home" class="page active">
+
+<div class="hero">
 
 <h1>CAFE JOURNEY</h1>
 
 <p>Discover your next favorite cafe</p>
 
-<button class="start" onclick="goCafe()">Explore Cafes</button>
+<button onclick="show('cafes')">Explore Cafes</button>
 
 </div>
 
-<!-- LIST -->
+<div class="project">
 
-<div id="cafes" class="screen">
+<h2>Our Mission</h2>
 
-<div class="header">Explore Cafes</div>
+<p>
 
-<div class="cafe-list" id="list"></div>
+This project aims to reduce disposable coffee cups.
+Enjoy coffee inside cafes and create moments of relaxation.
+
+</p>
+
+<img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085">
+
+</div>
+
+</div>
+
+<!-- CAFES -->
+
+<div id="cafes" class="page">
+
+<div class="cafe-grid" id="grid"></div>
 
 </div>
 
 <!-- DETAIL -->
 
-<div id="detail" class="screen">
+<div id="detail" class="page">
 
 <div id="banner"></div>
 
@@ -260,17 +335,11 @@ cursor:pointer;
 
 <p id="desc"></p>
 
-<h3>Menu</h3>
-
 <ul id="menu" class="menu"></ul>
 
-<div class="qr">
+<button onclick="scanQR()">Scan QR Stamp</button>
 
-<button onclick="startQR()">Scan QR Stamp</button>
-
-<div id="qr-reader" style="width:250px;margin:auto;"></div>
-
-</div>
+<div id="qr-reader" style="width:250px"></div>
 
 </div>
 
@@ -278,172 +347,105 @@ cursor:pointer;
 
 <script>
 
-/* STAMPS */
+/* STAMP DATA */
 
-let stamps=localStorage.getItem("stamps")
-
-if(!stamps){
-stamps=26
-localStorage.setItem("stamps",stamps)
-}
-
-stamps=parseInt(stamps)
+let stamps=JSON.parse(localStorage.getItem("stamps"))||{}
 
 /* CAFES */
 
 const cafes=[
 
-{
-id:1,
-name:"Cafe L'aube",
-dist:"0.5km",
+{ id:1,name:"Cafe L'aube",
 img1:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
 img2:"https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb",
 desc:"Morning sunlight cafe",
-menu:["Drip $5","Croissant $3","Morning set $8"]
-},
+menu:["Drip $5"]},
 
-{
-id:2,
-name:"Midnight Owl",
-dist:"3.2km",
+{ id:2,name:"Midnight Owl",
 img1:"https://images.unsplash.com/photo-1442512595331-e89e73853f31",
 img2:"https://images.unsplash.com/photo-1463797221720-6b07e6426c24",
-desc:"Late night jazz coffee",
-menu:["Dark blend $6","Irish coffee $8"]
-},
+desc:"Late night coffee",
+menu:["Dark blend $6"]},
 
-{
-id:3,
-name:"Botanica Espresso",
-dist:"1.1km",
+{ id:3,name:"Botanica",
 img1:"https://images.unsplash.com/photo-1498804103079-a6351b050096",
 img2:"https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81",
 desc:"Plant cafe",
-menu:["Ethiopia $7","Soy latte $6"]
-},
+menu:["Ethiopia $7"]},
 
-{
-id:4,
-name:"Industrial Mug",
-dist:"2.0km",
+{ id:4,name:"Industrial Mug",
 img1:"https://images.unsplash.com/photo-1453614512568-c4024d13c247",
 img2:"https://images.unsplash.com/photo-1481833761820-0509d3217039",
 desc:"Industrial cafe",
-menu:["Latte $6"]
-},
+menu:["Latte $6"]},
 
-{
-id:5,
-name:"Sea Breeze",
-dist:"4.5km",
+{ id:5,name:"Sea Breeze",
 img1:"https://images.unsplash.com/photo-1445116572660-236099ec97a0",
 img2:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735",
-desc:"Ocean theme cafe",
-menu:["Cold brew $5"]
-},
+desc:"Ocean cafe",
+menu:["Cold brew $5"]},
 
-{
-id:6,
-name:"Antique Roasters",
-dist:"1.8km",
+{ id:6,name:"Antique Roasters",
 img1:"https://images.unsplash.com/photo-1504754524776-8f4f37790ca0",
 img2:"https://images.unsplash.com/photo-1459755486867-b55449bb39ff",
-desc:"Retro coffee",
-menu:["Flannel drip $7"]
-},
+desc:"Retro cafe",
+menu:["Flannel drip $7"]},
 
-{
-id:7,
-name:"Sakura Terrace",
-dist:"0.9km",
+{ id:7,name:"Sakura Terrace",
 img1:"https://images.unsplash.com/photo-1521017432531-fbd92d768814",
 img2:"https://images.unsplash.com/photo-1494314671902-399b18174975",
 desc:"Terrace cafe",
-menu:["Matcha latte $6"]
-},
+menu:["Matcha latte $6"]},
 
-{
-id:8,
-name:"Minimalist Drop",
-dist:"2.3km",
+{ id:8,name:"Minimalist Drop",
 img1:"https://images.unsplash.com/photo-1511920170033-f8396924c348",
 img2:"https://images.unsplash.com/photo-1461988320302-91bde64fc8e4",
 desc:"Minimal cafe",
-menu:["Daily black $5"]
-},
+menu:["Daily black $5"]},
 
-{
-id:9,
-name:"Bookworm Cup",
-dist:"1.5km",
+{ id:9,name:"Bookworm Cup",
 img1:"https://images.unsplash.com/photo-1509042239860-f550ce710b93",
 img2:"https://images.unsplash.com/photo-1507133750040-4a8f57021571",
-desc:"Books and coffee",
-menu:["Readers blend $6"]
-},
+desc:"Books cafe",
+menu:["Readers blend $6"]},
 
-{
-id:10,
-name:"Starry Night",
-dist:"3.8km",
+{ id:10,name:"Starry Night",
 img1:"https://images.unsplash.com/photo-1517705008128-361805f42e86",
 img2:"https://images.unsplash.com/photo-1447933601403-0c6688de566e",
 desc:"Night sky cafe",
-menu:["Star macchiato $7"]
-}
+menu:["Star macchiato $7"]}
 
 ]
 
-/* NAVIGATION */
+/* NAV */
 
-function goHome(){
+function show(id){
 
-hideAll()
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
 
-document.getElementById("home").classList.add("active")
+document.getElementById(id).classList.add("active")
 
-}
-
-function goCafe(){
-
-hideAll()
-
-document.getElementById("cafes").classList.add("active")
-
-renderList()
+if(id==="cafes") renderGrid()
 
 }
 
-function hideAll(){
+/* GRID */
 
-document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
+function renderGrid(){
 
-}
+const grid=document.getElementById("grid")
 
-/* LIST */
-
-function renderList(){
-
-const list=document.getElementById("list")
-
-list.innerHTML=""
+grid.innerHTML=""
 
 cafes.forEach(c=>{
 
-list.innerHTML+=`
+grid.innerHTML+=`
 
-<div class="card" onclick="openCafe(${c.id})">
+<div class="cafe" onclick="openCafe(${c.id})">
 
 <img src="${c.img1}">
 
-<div class="card-info">
-
-<div class="card-title">${c.name}</div>
-
-<div class="distance">${c.dist}</div>
-
-</div>
+<div class="cafe-name">${c.name}</div>
 
 </div>
 
@@ -455,22 +457,22 @@ list.innerHTML+=`
 
 /* DETAIL */
 
+let currentCafe=null
+
 function openCafe(id){
 
-hideAll()
+currentCafe=id
 
-document.getElementById("detail").classList.add("active")
+show("detail")
 
 const cafe=cafes.find(c=>c.id===id)
 
-document.getElementById("title").innerText=cafe.name
+title.innerText=cafe.name
+img1.src=cafe.img1
+img2.src=cafe.img2
+desc.innerText=cafe.desc
 
-document.getElementById("img1").src=cafe.img1
-document.getElementById("img2").src=cafe.img2
-
-document.getElementById("desc").innerText=cafe.desc
-
-document.getElementById("menu").innerHTML=cafe.menu.map(m=>{
+menu.innerHTML=cafe.menu.map(m=>{
 
 let n=m.split("$")[0]
 let p=m.split("$")[1]
@@ -480,15 +482,20 @@ return `<li><span>${n}</span><span>$${p}</span></li>`
 }).join("")
 
 renderStamp()
-renderBanner()
 
 }
 
-/* STAMPS */
+/* STAMP */
 
 function renderStamp(){
 
-const remain=stamps%10
+let count=stamps[currentCafe]||0
+
+let free=Math.floor(count/10)
+
+let remain=count%10
+
+banner.innerHTML=`<div class="banner">Free Coffee × ${free}</div>`
 
 const box=document.getElementById("stamps")
 
@@ -497,48 +504,39 @@ box.innerHTML=""
 for(let i=0;i<10;i++){
 
 if(i<remain){
+
 box.innerHTML+=`<div class="stamp stamped">☕</div>`
+
 }else{
+
 box.innerHTML+=`<div class="stamp"></div>`
-}
 
 }
 
 }
-
-/* BANNER */
-
-function renderBanner(){
-
-const free=Math.floor(stamps/10)
-
-const banner=document.getElementById("banner")
-
-banner.innerHTML=`<div class="big-banner">Free Coffee × ${free}</div>`
 
 }
 
 /* QR */
 
-function startQR(){
+function scanQR(){
 
 const scanner=new Html5Qrcode("qr-reader")
 
 scanner.start(
 { facingMode:"environment" },
 { fps:10, qrbox:250 },
-(qrCodeMessage)=>{
+(msg)=>{
 
-if(qrCodeMessage==="CAFE_STAMP"){
+if(msg==="CAFE_STAMP"){
 
-stamps++
+stamps[currentCafe]=(stamps[currentCafe]||0)+1
 
-localStorage.setItem("stamps",stamps)
+localStorage.setItem("stamps",JSON.stringify(stamps))
 
-alert("Stamp Added!")
+alert("Stamp added!")
 
 renderStamp()
-renderBanner()
 
 scanner.stop()
 
