@@ -1,17 +1,22 @@
 ```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Cafe Journey</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 
 :root{
 --coffee:#2c1e16;
 --gold:#d4af37;
---bg:#f6f3ee;
+--bg:#f5f2ec;
 }
 
 body{
@@ -27,12 +32,25 @@ min-height:100vh;
 
 .active{
 display:block;
-animation:fade .4s ease;
 }
 
-@keyframes fade{
-from{opacity:0;transform:translateY(10px);}
-to{opacity:1;}
+/* NAVBAR */
+
+.navbar{
+display:flex;
+justify-content:center;
+gap:40px;
+padding:15px;
+background:white;
+border-bottom:3px solid var(--gold);
+font-weight:bold;
+}
+
+.navbar button{
+border:none;
+background:none;
+font-size:16px;
+cursor:pointer;
 }
 
 /* HOME */
@@ -43,9 +61,12 @@ flex-direction:column;
 justify-content:center;
 align-items:center;
 text-align:center;
+height:80vh;
+
 background:
 linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.6)),
 url("https://images.unsplash.com/photo-1509042239860-f550ce710b93");
+
 background-size:cover;
 color:white;
 }
@@ -61,31 +82,13 @@ font-weight:bold;
 cursor:pointer;
 }
 
-/* HEADER */
+/* CAFE LIST */
 
 .header{
-background:white;
-padding:15px;
-border-bottom:3px solid var(--gold);
 text-align:center;
-font-size:20px;
-font-weight:bold;
-}
-
-/* SEARCH */
-
-.search{
+font-size:22px;
 padding:15px;
 }
-
-.search input{
-width:100%;
-padding:12px;
-border-radius:8px;
-border:1px solid #ccc;
-}
-
-/* CAFE LIST */
 
 .cafe-list{
 padding:15px;
@@ -94,10 +97,10 @@ padding:15px;
 .card{
 display:flex;
 background:white;
-border-radius:12px;
 margin-bottom:15px;
+border-radius:12px;
 overflow:hidden;
-box-shadow:0 4px 8px rgba(0,0,0,.08);
+box-shadow:0 4px 10px rgba(0,0,0,.08);
 cursor:pointer;
 }
 
@@ -108,39 +111,33 @@ object-fit:cover;
 
 .card-info{
 padding:12px;
-flex:1;
 }
 
 .card-title{
 font-weight:bold;
-font-size:18px;
 color:var(--coffee);
+font-size:18px;
 }
 
 .distance{
+font-size:14px;
 color:#777;
-font-size:14px;
-}
-
-.favorite{
-margin-top:6px;
-font-size:14px;
-color:#999;
 }
 
 /* DETAIL */
 
-.banner{
-background:#fff7cc;
-padding:10px;
+.big-banner{
+background:#fff6cc;
 text-align:center;
+padding:25px;
+font-size:34px;
 font-weight:bold;
-border-bottom:3px solid var(--gold);
+border-bottom:4px solid var(--gold);
 }
 
 .point{
 background:var(--coffee);
-padding:25px;
+padding:30px;
 color:white;
 text-align:center;
 }
@@ -149,9 +146,9 @@ text-align:center;
 display:grid;
 grid-template-columns:repeat(5,1fr);
 gap:10px;
-max-width:300px;
+max-width:320px;
 margin:auto;
-margin-top:15px;
+margin-top:20px;
 }
 
 .stamp{
@@ -191,13 +188,9 @@ padding:10px 0;
 border-bottom:1px dashed #ddd;
 }
 
-.back{
-margin:10px;
-border:none;
-background:#eee;
-padding:8px 14px;
-border-radius:20px;
-cursor:pointer;
+.qr{
+margin-top:20px;
+text-align:center;
 }
 
 button{
@@ -209,32 +202,41 @@ cursor:pointer;
 
 <body>
 
+<div class="navbar">
+
+<button onclick="goHome()">Home</button>
+
+<button onclick="goCafe()">Cafes</button>
+
+</div>
+
+<!-- HOME -->
+
 <div id="home" class="screen active">
 
 <h1>CAFE JOURNEY</h1>
+
 <p>Discover your next favorite cafe</p>
 
-<button class="start" onclick="openList()">Explore Cafes</button>
+<button class="start" onclick="goCafe()">Explore Cafes</button>
 
 </div>
 
-<div id="list" class="screen">
+<!-- LIST -->
+
+<div id="cafes" class="screen">
 
 <div class="header">Explore Cafes</div>
 
-<div class="search">
-<input id="searchBox" placeholder="Search cafe..." oninput="searchCafe()">
-</div>
-
-<div class="cafe-list" id="cafeList"></div>
+<div class="cafe-list" id="list"></div>
 
 </div>
+
+<!-- DETAIL -->
 
 <div id="detail" class="screen">
 
 <div id="banner"></div>
-
-<button class="back" onclick="openList()">← Back</button>
 
 <div class="point">
 
@@ -249,8 +251,11 @@ cursor:pointer;
 <h2 id="title"></h2>
 
 <div class="images">
+
 <img id="img1">
+
 <img id="img2">
+
 </div>
 
 <p id="desc"></p>
@@ -259,9 +264,13 @@ cursor:pointer;
 
 <ul id="menu" class="menu"></ul>
 
-<button onclick="addStamp()">+ Add Stamp</button>
+<div class="qr">
 
-<button onclick="toggleFavorite()">★ Favorite</button>
+<button onclick="startQR()">Scan QR Stamp</button>
+
+<div id="qr-reader" style="width:250px;margin:auto;"></div>
+
+</div>
 
 </div>
 
@@ -269,89 +278,115 @@ cursor:pointer;
 
 <script>
 
-/* ===== STAMPS ===== */
+/* STAMPS */
 
-let totalStamps = localStorage.getItem("stamps")
+let stamps=localStorage.getItem("stamps")
 
-if(!totalStamps){
-totalStamps = 26
-localStorage.setItem("stamps",totalStamps)
+if(!stamps){
+stamps=26
+localStorage.setItem("stamps",stamps)
 }
 
-totalStamps=parseInt(totalStamps)
+stamps=parseInt(stamps)
 
-/* ===== FAVORITES ===== */
-
-let favorites = JSON.parse(localStorage.getItem("fav")) || []
-
-/* ===== CAFE DATA ===== */
+/* CAFES */
 
 const cafes=[
 
-{id:1,name:"Cafe L'aube",dist:"0.5km",
+{
+id:1,
+name:"Cafe L'aube",
+dist:"0.5km",
 img1:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
 img2:"https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb",
 desc:"Morning sunlight cafe",
 menu:["Drip $5","Croissant $3","Morning set $8"]
 },
 
-{id:2,name:"Midnight Owl",dist:"3.2km",
+{
+id:2,
+name:"Midnight Owl",
+dist:"3.2km",
 img1:"https://images.unsplash.com/photo-1442512595331-e89e73853f31",
 img2:"https://images.unsplash.com/photo-1463797221720-6b07e6426c24",
 desc:"Late night jazz coffee",
 menu:["Dark blend $6","Irish coffee $8"]
 },
 
-{id:3,name:"Botanica Espresso",dist:"1.1km",
+{
+id:3,
+name:"Botanica Espresso",
+dist:"1.1km",
 img1:"https://images.unsplash.com/photo-1498804103079-a6351b050096",
 img2:"https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81",
-desc:"Plant filled cafe",
+desc:"Plant cafe",
 menu:["Ethiopia $7","Soy latte $6"]
 },
 
-{id:4,name:"Industrial Mug",dist:"2.0km",
+{
+id:4,
+name:"Industrial Mug",
+dist:"2.0km",
 img1:"https://images.unsplash.com/photo-1453614512568-c4024d13c247",
 img2:"https://images.unsplash.com/photo-1481833761820-0509d3217039",
-desc:"Concrete design cafe",
-menu:["Latte $6","Flat white $6"]
+desc:"Industrial cafe",
+menu:["Latte $6"]
 },
 
-{id:5,name:"Sea Breeze",dist:"4.5km",
+{
+id:5,
+name:"Sea Breeze",
+dist:"4.5km",
 img1:"https://images.unsplash.com/photo-1445116572660-236099ec97a0",
 img2:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735",
-desc:"Ocean themed cafe",
-menu:["Cold brew $5","Cake $4"]
+desc:"Ocean theme cafe",
+menu:["Cold brew $5"]
 },
 
-{id:6,name:"Antique Roasters",dist:"1.8km",
+{
+id:6,
+name:"Antique Roasters",
+dist:"1.8km",
 img1:"https://images.unsplash.com/photo-1504754524776-8f4f37790ca0",
 img2:"https://images.unsplash.com/photo-1459755486867-b55449bb39ff",
-desc:"Retro furniture cafe",
+desc:"Retro coffee",
 menu:["Flannel drip $7"]
 },
 
-{id:7,name:"Sakura Terrace",dist:"0.9km",
+{
+id:7,
+name:"Sakura Terrace",
+dist:"0.9km",
 img1:"https://images.unsplash.com/photo-1521017432531-fbd92d768814",
 img2:"https://images.unsplash.com/photo-1494314671902-399b18174975",
 desc:"Terrace cafe",
 menu:["Matcha latte $6"]
 },
 
-{id:8,name:"Minimalist Drop",dist:"2.3km",
+{
+id:8,
+name:"Minimalist Drop",
+dist:"2.3km",
 img1:"https://images.unsplash.com/photo-1511920170033-f8396924c348",
 img2:"https://images.unsplash.com/photo-1461988320302-91bde64fc8e4",
-desc:"Minimal design cafe",
+desc:"Minimal cafe",
 menu:["Daily black $5"]
 },
 
-{id:9,name:"Bookworm Cup",dist:"1.5km",
+{
+id:9,
+name:"Bookworm Cup",
+dist:"1.5km",
 img1:"https://images.unsplash.com/photo-1509042239860-f550ce710b93",
 img2:"https://images.unsplash.com/photo-1507133750040-4a8f57021571",
-desc:"Coffee and books",
+desc:"Books and coffee",
 menu:["Readers blend $6"]
 },
 
-{id:10,name:"Starry Night",dist:"3.8km",
+{
+id:10,
+name:"Starry Night",
+dist:"3.8km",
 img1:"https://images.unsplash.com/photo-1517705008128-361805f42e86",
 img2:"https://images.unsplash.com/photo-1447933601403-0c6688de566e",
 desc:"Night sky cafe",
@@ -360,66 +395,70 @@ menu:["Star macchiato $7"]
 
 ]
 
-let currentCafe=null
-
 /* NAVIGATION */
 
-function openList(){
+function goHome(){
 
-document.getElementById("home").classList.remove("active")
-document.getElementById("detail").classList.remove("active")
+hideAll()
 
-document.getElementById("list").classList.add("active")
+document.getElementById("home").classList.add("active")
 
-renderList(cafes)
+}
+
+function goCafe(){
+
+hideAll()
+
+document.getElementById("cafes").classList.add("active")
+
+renderList()
+
+}
+
+function hideAll(){
+
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
 
 }
 
 /* LIST */
 
-function renderList(data){
+function renderList(){
 
-const list=document.getElementById("cafeList")
+const list=document.getElementById("list")
+
 list.innerHTML=""
 
-data.forEach(c=>{
-
-let fav=favorites.includes(c.id)?"★ Favorite":"☆"
+cafes.forEach(c=>{
 
 list.innerHTML+=`
-<div class="card" onclick="openDetail(${c.id})">
+
+<div class="card" onclick="openCafe(${c.id})">
+
 <img src="${c.img1}">
+
 <div class="card-info">
+
 <div class="card-title">${c.name}</div>
+
 <div class="distance">${c.dist}</div>
-<div class="favorite">${fav}</div>
+
 </div>
+
 </div>
+
 `
 
 })
 
 }
 
-/* SEARCH */
-
-function searchCafe(){
-
-const keyword=document.getElementById("searchBox").value.toLowerCase()
-
-const filtered=cafes.filter(c=>c.name.toLowerCase().includes(keyword))
-
-renderList(filtered)
-
-}
-
 /* DETAIL */
 
-function openDetail(id){
+function openCafe(id){
 
-currentCafe=id
+hideAll()
 
-document.getElementById("list").classList.remove("active")
 document.getElementById("detail").classList.add("active")
 
 const cafe=cafes.find(c=>c.id===id)
@@ -440,16 +479,16 @@ return `<li><span>${n}</span><span>$${p}</span></li>`
 
 }).join("")
 
-renderStamps()
+renderStamp()
 renderBanner()
 
 }
 
-/* STAMP */
+/* STAMPS */
 
-function renderStamps(){
+function renderStamp(){
 
-const remain=totalStamps%10
+const remain=stamps%10
 
 const box=document.getElementById("stamps")
 
@@ -471,48 +510,42 @@ box.innerHTML+=`<div class="stamp"></div>`
 
 function renderBanner(){
 
-const free=Math.floor(totalStamps/10)
+const free=Math.floor(stamps/10)
 
 const banner=document.getElementById("banner")
 
-if(free>0){
-banner.innerHTML=`<div class="banner">Free Coffee × ${free}</div>`
-}else{
-banner.innerHTML=""
-}
+banner.innerHTML=`<div class="big-banner">Free Coffee × ${free}</div>`
 
 }
 
-/* ADD STAMP */
+/* QR */
 
-function addStamp(){
+function startQR(){
 
-totalStamps++
+const scanner=new Html5Qrcode("qr-reader")
 
-localStorage.setItem("stamps",totalStamps)
+scanner.start(
+{ facingMode:"environment" },
+{ fps:10, qrbox:250 },
+(qrCodeMessage)=>{
 
-renderStamps()
+if(qrCodeMessage==="CAFE_STAMP"){
+
+stamps++
+
+localStorage.setItem("stamps",stamps)
+
+alert("Stamp Added!")
+
+renderStamp()
 renderBanner()
 
-}
-
-/* FAVORITE */
-
-function toggleFavorite(){
-
-if(favorites.includes(currentCafe)){
-
-favorites=favorites.filter(f=>f!==currentCafe)
-
-}else{
-
-favorites.push(currentCafe)
+scanner.stop()
 
 }
 
-localStorage.setItem("fav",JSON.stringify(favorites))
-
-alert("Saved")
+}
+)
 
 }
 
