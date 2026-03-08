@@ -1,8 +1,9 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cafe Journey</title>
 
 <style>
@@ -10,14 +11,13 @@
 :root{
 --coffee:#2c1e16;
 --gold:#d4af37;
---bg:#f5f2ec;
+--bg:#f6f3ee;
 }
 
 body{
 margin:0;
-font-family:Arial, Helvetica, sans-serif;
+font-family:Arial;
 background:var(--bg);
-color:#333;
 }
 
 .screen{
@@ -31,53 +31,61 @@ animation:fade .4s ease;
 }
 
 @keyframes fade{
-from{opacity:0; transform:translateY(10px);}
-to{opacity:1; transform:none;}
+from{opacity:0;transform:translateY(10px);}
+to{opacity:1;}
 }
 
 /* HOME */
 
 #home{
-background:
-linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.6)),
-url("https://images.unsplash.com/photo-1509042239860-f550ce710b93");
-background-size:cover;
-background-position:center;
 display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
 text-align:center;
+background:
+linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.6)),
+url("https://images.unsplash.com/photo-1509042239860-f550ce710b93");
+background-size:cover;
 color:white;
-padding:20px;
 }
 
-#home h1{
-font-size:2.3rem;
-letter-spacing:3px;
-}
-
-.start-btn{
-margin-top:40px;
-padding:16px 40px;
+.start{
+margin-top:30px;
+padding:18px 40px;
+background:var(--gold);
 border:none;
 border-radius:30px;
 font-size:18px;
 font-weight:bold;
-background:var(--gold);
-color:var(--coffee);
 cursor:pointer;
 }
 
-/* LIST */
+/* HEADER */
 
 .header{
-text-align:center;
-padding:18px;
-font-size:22px;
-font-weight:bold;
+background:white;
+padding:15px;
 border-bottom:3px solid var(--gold);
+text-align:center;
+font-size:20px;
+font-weight:bold;
 }
+
+/* SEARCH */
+
+.search{
+padding:15px;
+}
+
+.search input{
+width:100%;
+padding:12px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+/* CAFE LIST */
 
 .cafe-list{
 padding:15px;
@@ -85,7 +93,6 @@ padding:15px;
 
 .card{
 display:flex;
-height:120px;
 background:white;
 border-radius:12px;
 margin-bottom:15px;
@@ -102,56 +109,47 @@ object-fit:cover;
 .card-info{
 padding:12px;
 flex:1;
-display:flex;
-flex-direction:column;
-justify-content:center;
 }
 
 .card-title{
-font-size:18px;
 font-weight:bold;
+font-size:18px;
 color:var(--coffee);
 }
 
-.card-distance{
-font-size:14px;
+.distance{
 color:#777;
-margin-top:4px;
+font-size:14px;
+}
+
+.favorite{
+margin-top:6px;
+font-size:14px;
+color:#999;
 }
 
 /* DETAIL */
 
 .banner{
-background:#fffae6;
-border-bottom:3px solid var(--gold);
-text-align:center;
+background:#fff7cc;
 padding:10px;
+text-align:center;
 font-weight:bold;
-color:#6b5200;
+border-bottom:3px solid var(--gold);
 }
 
-.back{
-margin:15px;
-border:none;
-background:#eee;
-padding:8px 14px;
-border-radius:20px;
-cursor:pointer;
-}
-
-.point-area{
+.point{
 background:var(--coffee);
-padding:30px 20px;
+padding:25px;
 color:white;
 text-align:center;
-border-radius:0 0 20px 20px;
 }
 
-.stamp-grid{
+.stamps{
 display:grid;
 grid-template-columns:repeat(5,1fr);
 gap:10px;
-max-width:320px;
+max-width:300px;
 margin:auto;
 margin-top:15px;
 }
@@ -159,11 +157,10 @@ margin-top:15px;
 .stamp{
 aspect-ratio:1;
 border-radius:50%;
-border:2px dashed rgba(255,255,255,.3);
+border:2px dashed rgba(255,255,255,.4);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:20px;
 }
 
 .stamped{
@@ -176,32 +173,15 @@ color:var(--coffee);
 padding:20px;
 }
 
-.detail h2{
-color:var(--coffee);
-}
-
 .images{
 display:flex;
 gap:10px;
 overflow-x:auto;
-margin:15px 0;
 }
 
 .images img{
 width:70%;
 border-radius:10px;
-}
-
-.desc{
-background:#faf6f0;
-padding:15px;
-border-left:4px solid var(--gold);
-border-radius:6px;
-line-height:1.7;
-}
-
-.menu{
-margin-top:20px;
 }
 
 .menu li{
@@ -211,20 +191,40 @@ padding:10px 0;
 border-bottom:1px dashed #ddd;
 }
 
+.back{
+margin:10px;
+border:none;
+background:#eee;
+padding:8px 14px;
+border-radius:20px;
+cursor:pointer;
+}
+
+button{
+cursor:pointer;
+}
+
 </style>
 </head>
 
 <body>
 
 <div id="home" class="screen active">
+
 <h1>CAFE JOURNEY</h1>
-<p>Discover a unique cafe near you</p>
-<button class="start-btn" onclick="openList()">Explore Cafes ☕</button>
+<p>Discover your next favorite cafe</p>
+
+<button class="start" onclick="openList()">Explore Cafes</button>
+
 </div>
 
 <div id="list" class="screen">
 
 <div class="header">Explore Cafes</div>
+
+<div class="search">
+<input id="searchBox" placeholder="Search cafe..." oninput="searchCafe()">
+</div>
 
 <div class="cafe-list" id="cafeList"></div>
 
@@ -232,30 +232,36 @@ border-bottom:1px dashed #ddd;
 
 <div id="detail" class="screen">
 
-<div id="freeBanner"></div>
+<div id="banner"></div>
 
 <button class="back" onclick="openList()">← Back</button>
 
-<div class="point-area">
+<div class="point">
 
-<h3>MEMBER STAMP CARD</h3>
+<h3>STAMP CARD</h3>
 
-<div class="stamp-grid" id="stamps"></div>
+<div class="stamps" id="stamps"></div>
 
 </div>
 
 <div class="detail">
 
-<h2 id="cafeTitle"></h2>
+<h2 id="title"></h2>
 
 <div class="images">
 <img id="img1">
 <img id="img2">
 </div>
 
-<p id="desc" class="desc"></p>
+<p id="desc"></p>
+
+<h3>Menu</h3>
 
 <ul id="menu" class="menu"></ul>
+
+<button onclick="addStamp()">+ Add Stamp</button>
+
+<button onclick="toggleFavorite()">★ Favorite</button>
 
 </div>
 
@@ -263,121 +269,100 @@ border-bottom:1px dashed #ddd;
 
 <script>
 
-/* ===== Stamp Example ===== */
+/* ===== STAMPS ===== */
 
-const totalStamps = 26
+let totalStamps = localStorage.getItem("stamps")
 
-const freeCoffee = Math.floor(totalStamps / 10)
-const remain = totalStamps % 10
+if(!totalStamps){
+totalStamps = 26
+localStorage.setItem("stamps",totalStamps)
+}
 
+totalStamps=parseInt(totalStamps)
 
-/* ===== Cafe Data ===== */
+/* ===== FAVORITES ===== */
+
+let favorites = JSON.parse(localStorage.getItem("fav")) || []
+
+/* ===== CAFE DATA ===== */
 
 const cafes=[
 
-{
-id:1,
-name:"Cafe L'aube",
-distance:"0.5km",
-img1:"https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb",
-img2:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
-desc:"A bright cafe filled with morning sunlight.",
-menu:["Morning set $8","Light drip $5","Croissant $3"]
+{id:1,name:"Cafe L'aube",dist:"0.5km",
+img1:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
+img2:"https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb",
+desc:"Morning sunlight cafe",
+menu:["Drip $5","Croissant $3","Morning set $8"]
 },
 
-{
-id:2,
-name:"Midnight Owl",
-distance:"3.2km",
+{id:2,name:"Midnight Owl",dist:"3.2km",
 img1:"https://images.unsplash.com/photo-1442512595331-e89e73853f31",
 img2:"https://images.unsplash.com/photo-1463797221720-6b07e6426c24",
-desc:"Late night coffee and jazz music.",
-menu:["Dark blend $6","Irish coffee $8","Raw chocolate $4"]
+desc:"Late night jazz coffee",
+menu:["Dark blend $6","Irish coffee $8"]
 },
 
-{
-id:3,
-name:"Botanica Espresso",
-distance:"1.1km",
+{id:3,name:"Botanica Espresso",dist:"1.1km",
 img1:"https://images.unsplash.com/photo-1498804103079-a6351b050096",
 img2:"https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81",
-desc:"A cafe surrounded by plants.",
-menu:["Ethiopia $7","Soy latte $6","Carrot cake $5"]
+desc:"Plant filled cafe",
+menu:["Ethiopia $7","Soy latte $6"]
 },
 
-{
-id:4,
-name:"Industrial Mug",
-distance:"2.0km",
+{id:4,name:"Industrial Mug",dist:"2.0km",
 img1:"https://images.unsplash.com/photo-1453614512568-c4024d13c247",
 img2:"https://images.unsplash.com/photo-1481833761820-0509d3217039",
-desc:"Industrial style coffee bar.",
-menu:["Latte $6","Flat white $6","Espresso $4"]
+desc:"Concrete design cafe",
+menu:["Latte $6","Flat white $6"]
 },
 
-{
-id:5,
-name:"Sea Breeze Cafe",
-distance:"4.5km",
+{id:5,name:"Sea Breeze",dist:"4.5km",
 img1:"https://images.unsplash.com/photo-1445116572660-236099ec97a0",
 img2:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735",
-desc:"Ocean themed cafe.",
-menu:["Cold brew $5","Lemonade $5","Chiffon cake $4"]
+desc:"Ocean themed cafe",
+menu:["Cold brew $5","Cake $4"]
 },
 
-{
-id:6,
-name:"Antique Roasters",
-distance:"1.8km",
+{id:6,name:"Antique Roasters",dist:"1.8km",
 img1:"https://images.unsplash.com/photo-1504754524776-8f4f37790ca0",
 img2:"https://images.unsplash.com/photo-1459755486867-b55449bb39ff",
-desc:"Retro furniture and classic coffee.",
-menu:["Flannel drip $7","Vienna coffee $8","Pudding $5"]
+desc:"Retro furniture cafe",
+menu:["Flannel drip $7"]
 },
 
-{
-id:7,
-name:"Sakura Terrace",
-distance:"0.9km",
+{id:7,name:"Sakura Terrace",dist:"0.9km",
 img1:"https://images.unsplash.com/photo-1521017432531-fbd92d768814",
 img2:"https://images.unsplash.com/photo-1494314671902-399b18174975",
-desc:"Terrace cafe with matcha drinks.",
-menu:["Matcha latte $6","Hojicha $6","Cookie $3"]
+desc:"Terrace cafe",
+menu:["Matcha latte $6"]
 },
 
-{
-id:8,
-name:"Minimalist Drop",
-distance:"2.3km",
+{id:8,name:"Minimalist Drop",dist:"2.3km",
 img1:"https://images.unsplash.com/photo-1511920170033-f8396924c348",
 img2:"https://images.unsplash.com/photo-1461988320302-91bde64fc8e4",
-desc:"Minimalist coffee bar.",
-menu:["Daily black $5","Aeropress $7","Biscotti $3"]
+desc:"Minimal design cafe",
+menu:["Daily black $5"]
 },
 
-{
-id:9,
-name:"Bookworm Cup",
-distance:"1.5km",
+{id:9,name:"Bookworm Cup",dist:"1.5km",
 img1:"https://images.unsplash.com/photo-1509042239860-f550ce710b93",
 img2:"https://images.unsplash.com/photo-1507133750040-4a8f57021571",
-desc:"Coffee and books everywhere.",
-menu:["Readers blend $6","Tea $5","Scone $5"]
+desc:"Coffee and books",
+menu:["Readers blend $6"]
 },
 
-{
-id:10,
-name:"Starry Night Coffee",
-distance:"3.8km",
+{id:10,name:"Starry Night",dist:"3.8km",
 img1:"https://images.unsplash.com/photo-1517705008128-361805f42e86",
 img2:"https://images.unsplash.com/photo-1447933601403-0c6688de566e",
-desc:"Planetarium themed cafe.",
-menu:["Star macchiato $7","Blue tea $6","Galaxy tart $6"]
+desc:"Night sky cafe",
+menu:["Star macchiato $7"]
 }
 
 ]
 
-/* ===== Navigation ===== */
+let currentCafe=null
+
+/* NAVIGATION */
 
 function openList(){
 
@@ -386,78 +371,85 @@ document.getElementById("detail").classList.remove("active")
 
 document.getElementById("list").classList.add("active")
 
-renderList()
+renderList(cafes)
 
 }
 
-/* ===== Render List ===== */
+/* LIST */
 
-function renderList(){
+function renderList(data){
 
 const list=document.getElementById("cafeList")
-
 list.innerHTML=""
 
-cafes.forEach(c=>{
+data.forEach(c=>{
+
+let fav=favorites.includes(c.id)?"★ Favorite":"☆"
 
 list.innerHTML+=`
-
 <div class="card" onclick="openDetail(${c.id})">
-
 <img src="${c.img1}">
-
 <div class="card-info">
-
 <div class="card-title">${c.name}</div>
-
-<div class="card-distance">Distance ${c.distance}</div>
-
+<div class="distance">${c.dist}</div>
+<div class="favorite">${fav}</div>
 </div>
-
 </div>
-
 `
 
 })
 
 }
 
-/* ===== Detail ===== */
+/* SEARCH */
+
+function searchCafe(){
+
+const keyword=document.getElementById("searchBox").value.toLowerCase()
+
+const filtered=cafes.filter(c=>c.name.toLowerCase().includes(keyword))
+
+renderList(filtered)
+
+}
+
+/* DETAIL */
 
 function openDetail(id){
+
+currentCafe=id
 
 document.getElementById("list").classList.remove("active")
 document.getElementById("detail").classList.add("active")
 
 const cafe=cafes.find(c=>c.id===id)
 
-document.getElementById("cafeTitle").innerText=cafe.name
+document.getElementById("title").innerText=cafe.name
 
 document.getElementById("img1").src=cafe.img1
 document.getElementById("img2").src=cafe.img2
 
 document.getElementById("desc").innerText=cafe.desc
 
-document.getElementById("menu").innerHTML=
+document.getElementById("menu").innerHTML=cafe.menu.map(m=>{
 
-cafe.menu.map(m=>{
+let n=m.split("$")[0]
+let p=m.split("$")[1]
 
-const name=m.split("$")[0]
-const price=m.split("$")[1]
-
-return `<li><span>${name}</span><span>$${price}</span></li>`
+return `<li><span>${n}</span><span>$${p}</span></li>`
 
 }).join("")
 
-renderStamp()
-
+renderStamps()
 renderBanner()
 
 }
 
-/* ===== Stamp ===== */
+/* STAMP */
 
-function renderStamp(){
+function renderStamps(){
+
+const remain=totalStamps%10
 
 const box=document.getElementById("stamps")
 
@@ -467,8 +459,7 @@ for(let i=0;i<10;i++){
 
 if(i<remain){
 box.innerHTML+=`<div class="stamp stamped">☕</div>`
-}
-else{
+}else{
 box.innerHTML+=`<div class="stamp"></div>`
 }
 
@@ -476,20 +467,52 @@ box.innerHTML+=`<div class="stamp"></div>`
 
 }
 
-/* ===== Banner ===== */
+/* BANNER */
 
 function renderBanner(){
 
-const banner=document.getElementById("freeBanner")
+const free=Math.floor(totalStamps/10)
 
-if(freeCoffee>0){
+const banner=document.getElementById("banner")
 
-banner.innerHTML=`<div class="banner">🎉 Free Coffee × ${freeCoffee}</div>`
-
-}
-else{
+if(free>0){
+banner.innerHTML=`<div class="banner">Free Coffee × ${free}</div>`
+}else{
 banner.innerHTML=""
 }
+
+}
+
+/* ADD STAMP */
+
+function addStamp(){
+
+totalStamps++
+
+localStorage.setItem("stamps",totalStamps)
+
+renderStamps()
+renderBanner()
+
+}
+
+/* FAVORITE */
+
+function toggleFavorite(){
+
+if(favorites.includes(currentCafe)){
+
+favorites=favorites.filter(f=>f!==currentCafe)
+
+}else{
+
+favorites.push(currentCafe)
+
+}
+
+localStorage.setItem("fav",JSON.stringify(favorites))
+
+alert("Saved")
 
 }
 
@@ -497,3 +520,4 @@ banner.innerHTML=""
 
 </body>
 </html>
+```
