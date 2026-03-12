@@ -64,7 +64,7 @@
   .welcome-desc { font-size:.82rem; color:var(--coffee); text-align:center; line-height:1.9; margin-bottom:1.8rem; max-width:265px; opacity:.75; }
 
   .timer-select-label { font-size:.67rem; letter-spacing:.22em; text-transform:uppercase; color:var(--latte); margin-bottom:.9rem; }
-  .timer-options { display:flex; align-items:flex-end; gap:.75rem; margin-bottom:1.7rem; }
+  .timer-options { display:flex; align-items:flex-end; gap:.45rem; margin-bottom:1.7rem; }
   .timer-option { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform .15s; }
   .timer-option:active { transform:scale(.94); }
   .timer-card { background:var(--cream); border:1.5px solid var(--foam); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:border-color .2s, box-shadow .2s, background .2s; }
@@ -201,6 +201,9 @@
   <p class="welcome-desc">Put your phone down.<br>Enjoy the scent of your coffee.<br>Your time, your pace.</p>
   <p class="timer-select-label">How long would you like?</p>
   <div class="timer-options">
+    <div class="timer-option small" data-secs="1" onclick="selectTimer(1)">
+      <div class="timer-card"><div class="timer-mins">1</div><div class="timer-unit">sec</div></div>
+    </div>
     <div class="timer-option small" data-secs="300" onclick="selectTimer(300)">
       <div class="timer-card"><div class="timer-mins">5</div><div class="timer-unit">min</div></div>
     </div>
@@ -306,7 +309,6 @@
 <script>
   /* ─────────────────────────────────────
      ★ SUPABASE CONFIG
-     ここに自分のプロジェクト情報を入れる
   ───────────────────────────────────── */
   const SUPABASE_URL    = 'https://lclcmuiaqekhpntddffv.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjbGNtdWlhcWVraHBudGRkZmZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMDk3ODMsImV4cCI6MjA4ODc4NTc4M30.EhB7CUgZ_8SUscpQ9Mf6_Mkd1qJ9V6i8iADkVRDVQNo=';
@@ -343,8 +345,9 @@
   ───────────────────────────────────── */
   let selectedSecs = 600;
   let TIMER_SECONDS = 600;
-  let timeLeft = 600;
   let timerInterval = null;
+  let timerStartTime = null;   // ★ Date.now() at start
+  let timerEndTime = null;     // ★ Date.now() + duration
   let myEntryId = null;
   const circumference = 628.3;
 
@@ -371,9 +374,10 @@
   }
 
   function formatTime(s) {
-    return s >= 60
-      ? String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0')
-      : '0:' + String(s).padStart(2,'0');
+    const clamped = Math.max(0, s);
+    return clamped >= 60
+      ? String(Math.floor(clamped/60)).padStart(2,'0') + ':' + String(clamped%60).padStart(2,'0')
+      : '0:' + String(clamped).padStart(2,'0');
   }
 
   function updateRing(s) {
@@ -405,24 +409,73 @@
   }
 
   /* ─────────────────────────────────────
-     Timer
+     Timer  ★ Wall-clock based (background-safe)
+     
+     代わりに Date.now() で経過時間を計算するため、
+     ブラウザがバックグラウンドで setInterval を
+     throttle しても残り時間がズレない。
   ───────────────────────────────────── */
   function startTimer() {
-    TIMER_SECONDS = selectedSecs; timeLeft = TIMER_SECONDS; lastMsg = '';
+    TIMER_SECONDS = selectedSecs;
+    lastMsg = '';
+
     showScreen('screen-timer');
     createAmbientDots();
-    document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+
+    // ★ 壁時計を記録
+    timerStartTime = Date.now();
+    timerEndTime   = timerStartTime + TIMER_SECONDS * 1000;
+
+    // 初期表示
+    document.getElementById('timerDisplay').textContent = formatTime(TIMER_SECONDS);
     const init = timerMessages[0].text;
     document.getElementById('timerMessage').innerHTML = init;
     document.getElementById('timerMessage').style.opacity = '.75';
-    lastMsg = init; updateRing(timeLeft);
+    lastMsg = init;
+    updateRing(TIMER_SECONDS);
+
     clearInterval(timerInterval);
+
+    // ★ tick は UI 更新専用。残り時間は Date.now() から計算
     timerInterval = setInterval(() => {
-      timeLeft--;
-      document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
-      updateRing(timeLeft); updateMessage(timeLeft);
-      if (timeLeft <= 0) { clearInterval(timerInterval); setTimeout(showDiary, 700); }
-    }, 1000);
+      const remaining = Math.round((timerEndTime - Date.now()) / 1000);
+
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('timerDisplay').textContent = '0:00';
+        updateRing(0);
+        setTimeout(showDiary, 700);
+        return;
+      }
+
+      document.getElementById('timerDisplay').textContent = formatTime(remaining);
+      updateRing(remaining);
+      updateMessage(remaining);
+    }, 500); // ★ 500ms ごとにポーリング（throttle されても精度を保つ）
+
+    // ★ Page Visibility API: タブが再表示されたとき即座に補正
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+  }
+
+  function onVisibilityChange() {
+    if (document.visibilityState !== 'visible') return;
+    if (!timerEndTime) return;
+
+    const remaining = Math.round((timerEndTime - Date.now()) / 1000);
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById('timerDisplay').textContent = '0:00';
+      updateRing(0);
+      setTimeout(showDiary, 300);
+      return;
+    }
+
+    // 即座に表示を補正
+    document.getElementById('timerDisplay').textContent = formatTime(remaining);
+    updateRing(remaining);
+    updateMessage(remaining);
   }
 
   /* ─────────────────────────────────────
@@ -514,7 +567,6 @@
     container.appendChild(countEl);
 
     entries.forEach((entry, i) => {
-      // Mark as mine if it matches what we just posted (same text + approximate time)
       const isMe = justPosted
         && entry.text === justPosted.text
         && entry.date_label === justPosted.date_label
@@ -545,6 +597,9 @@
      Restart
   ───────────────────────────────────── */
   function restartApp() {
+    clearInterval(timerInterval);
+    timerStartTime = null;
+    timerEndTime = null;
     myEntryId = null;
     selectTimer(600);
     showScreen('screen-welcome');
