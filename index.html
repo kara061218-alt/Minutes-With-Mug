@@ -280,13 +280,12 @@
 <script>
   /* ─────────────────────────────────────
      ★ EmailJS CONFIG
-     下記3つを EmailJS ダッシュボードで取得・設定してください
-     テンプレート変数: {{rating}} {{duration}} {{comment}} {{sent_at}}
-     To Email (テンプレート宛先): koki74497@gmail.com
+     Template variables: {{rating}} {{duration}} {{comment}} {{sent_at}}
+     Recipient: koki74497@gmail.com
   ───────────────────────────────────── */
-  const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
-  const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
-  const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+  const EMAILJS_PUBLIC_KEY  = 'yJJhhfeUAZiSV2m8A';
+  const EMAILJS_SERVICE_ID  = 'service_hktb40l';
+  const EMAILJS_TEMPLATE_ID = 'template_phcs2vx';
 
   emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -457,6 +456,7 @@
     const stars = '★'.repeat(selectedStar) + '☆'.repeat(5 - selectedStar);
 
     const templateParams = {
+      to_email: 'koki74497@gmail.com',
       rating:   `${stars}  (${selectedStar} / 5)`,
       duration: `${mins} min`,
       comment:  comment || '(No comment)',
@@ -489,10 +489,6 @@
   ['screen-welcome','screen-timer'].forEach(id => {
     document.getElementById(id).addEventListener('touchmove', e => e.preventDefault(), { passive:false });
   });
-</script>
-const EMAILJS_PUBLIC_KEY  = 'yJJhhfeUAZiSV2m8A';
-const EMAILJS_SERVICE_ID  = 'service_hktb40l';
-const EMAILJS_TEMPLATE_ID = 'template_phcs2vx';
 </script>
 </body>
 </html>
