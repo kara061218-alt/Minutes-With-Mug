@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<!-- CSP: only allow scripts/styles from self and known CDNs -->
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com;
+           style-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
+           font-src   https://fonts.gstatic.com;
+           connect-src https://api.emailjs.com;
+           img-src 'self' data:;">
 <title>Minutes With Cafe</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -174,7 +182,6 @@
 <!-- ══ SCREEN 1 · WELCOME ══ -->
 <div id="screen-welcome" class="screen active">
   <p class="site-title">Minutes With Cafe</p>
-  <p class="cafe-wordmark">at Farro Nourishing Eatery</p>
   <div class="coffee-cup">
     <svg class="cup-svg" viewBox="0 0 120 120" fill="none">
       <path class="steam-line" d="M42 28 Q38 20 42 12" stroke="#C49A72" stroke-width="2" stroke-linecap="round" fill="none"/>
@@ -214,7 +221,6 @@
 <!-- ══ SCREEN 2 · TIMER ══ -->
 <div id="screen-timer" class="screen">
   <div class="ambient-dots" id="ambientDots"></div>
-  <p class="timer-cafe-name">Minutes With Cafe · Farro</p>
   <p class="timer-header">your slow moment</p>
   <div class="timer-ring-wrapper">
     <svg class="timer-ring" width="220" height="220" viewBox="0 0 220 220">
@@ -237,7 +243,6 @@
         <path d="M8 18 L15 25 L28 11" stroke="#F5EFE0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <p class="done-badge">Minutes With Cafe · Farro</p>
     <h2 class="done-title">Done.</h2>
     <p class="done-sub">Have a good day! ☕</p>
   </div>
@@ -272,7 +277,6 @@
       <p class="survey-sent-msg">Thank you for sharing.<br>Your feedback means a lot to us.</p>
     </div>
 
-    <p class="done-stamp">Minutes With Cafe · Farro Nourishing Eatery</p>
     <button class="restart-btn" onclick="restartApp()">Take another break →</button>
   </div>
 </div>
@@ -285,19 +289,43 @@
   ───────────────────────────────────── */
   const EMAILJS_PUBLIC_KEY  = 'yJJhhfeUAZiSV2m8A';
   const EMAILJS_SERVICE_ID  = 'service_hktb40l';
-  const EMAILJS_TEMPLATE_ID = 'template_8ebba5p';
+  const EMAILJS_TEMPLATE_ID = 'template_phcs2vx';
 
-  emailjs.init(EMAILJS_PUBLIC_KEY);
+  // Use object-form init (EmailJS v4 recommended)
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
   /* ─────────────────────────────────────
      App state
   ───────────────────────────────────── */
   let selectedSecs  = 600;
   let TIMER_SECONDS = 600;
-  let timerInterval = null;
+  let timerWorker   = null;   // Web Worker for background-safe ticking
   let timerEndTime  = null;
   let selectedStar  = 0;
+  let wakeLock      = null;
   const circumference = 628.3;
+
+  /* ─────────────────────────────────────
+     Security state
+  ───────────────────────────────────── */
+  let _surveySent      = false;
+  let _lastSubmitTime  = 0;
+  const RATE_LIMIT_MS  = 30000;
+  const MAX_COMMENT    = 500;
+  const ALLOWED_STARS  = [1,2,3,4,5];
+
+  function sanitizeText(str) {
+    return String(str)
+      .slice(0, MAX_COMMENT)
+      .replace(/[<>"'`]/g, c => ({ '<':'＜','>':'＞','"':'＂',"'":'＇','`':'｀' }[c]))
+      .trim();
+  }
+
+  function validateSurvey(star, comment) {
+    if (!ALLOWED_STARS.includes(star))  return 'Please select a rating.';
+    if (comment.length > MAX_COMMENT)   return `Comment must be ${MAX_COMMENT} characters or fewer.`;
+    return null;
+  }
 
   const timerMessages = [
     { ratio:1.0, text:"Take a deep breath.<br>You've got nowhere to be." },
@@ -305,6 +333,35 @@
     { ratio:0.35,text:"Right here.<br>Right now." },
     { ratio:0.1, text:"Almost there." },
   ];
+
+  /* ─────────────────────────────────────
+     Web Worker  (inline Blob — no extra file needed)
+     Runs in a separate thread → never throttled by the browser,
+     even when the tab is hidden or the phone screen is locked.
+     It sends the real wall-clock "remaining" each second.
+  ───────────────────────────────────── */
+  function createTimerWorker() {
+    const src = `
+      let endTime = null;
+      let id = null;
+      self.onmessage = function(e) {
+        if (e.data.type === 'start') {
+          endTime = e.data.endTime;
+          clearInterval(id);
+          id = setInterval(function() {
+            const remaining = Math.round((endTime - Date.now()) / 1000);
+            self.postMessage({ remaining: remaining });
+            if (remaining <= 0) clearInterval(id);
+          }, 500);
+        }
+        if (e.data.type === 'stop') {
+          clearInterval(id);
+        }
+      };
+    `;
+    const blob = new Blob([src], { type: 'application/javascript' });
+    return new Worker(URL.createObjectURL(blob));
+  }
 
   /* ─────────────────────────────────────
      UI helpers
@@ -359,15 +416,21 @@
   }
 
   /* ─────────────────────────────────────
-     Timer (wall-clock based, background-safe)
+     Timer
+     Layer 1: Web Worker — ticks every 500ms in a separate thread,
+              completely unaffected by tab visibility or battery saver.
+     Layer 2: visibilitychange — instant correction when screen wakes.
+     Layer 3: Screen Wake Lock — tries to keep display on during timer.
   ───────────────────────────────────── */
   function startTimer() {
     TIMER_SECONDS = selectedSecs;
     lastMsg = '';
     showScreen('screen-timer');
     createAmbientDots();
+    acquireWakeLock();
 
     timerEndTime = Date.now() + TIMER_SECONDS * 1000;
+
     document.getElementById('timerDisplay').textContent = formatTime(TIMER_SECONDS);
     const init = timerMessages[0].text;
     document.getElementById('timerMessage').innerHTML = init;
@@ -375,11 +438,15 @@
     lastMsg = init;
     updateRing(TIMER_SECONDS);
 
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-      const remaining = Math.round((timerEndTime - Date.now()) / 1000);
+    // Kill any previous worker
+    if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
+
+    timerWorker = createTimerWorker();
+    timerWorker.onmessage = function(e) {
+      const remaining = e.data.remaining;
       if (remaining <= 0) {
-        clearInterval(timerInterval);
+        timerWorker.terminate(); timerWorker = null;
+        releaseWakeLock();
         document.getElementById('timerDisplay').textContent = '0:00';
         updateRing(0);
         setTimeout(showDone, 700);
@@ -388,7 +455,8 @@
       document.getElementById('timerDisplay').textContent = formatTime(remaining);
       updateRing(remaining);
       updateMessage(remaining);
-    }, 500);
+    };
+    timerWorker.postMessage({ type: 'start', endTime: timerEndTime });
 
     document.removeEventListener('visibilitychange', onVisibilityChange);
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -396,9 +464,13 @@
 
   function onVisibilityChange() {
     if (document.visibilityState !== 'visible' || !timerEndTime) return;
+    // Re-acquire wake lock if released during sleep
+    if (!wakeLock) acquireWakeLock();
+    // Instantly correct the display on screen wake
     const remaining = Math.round((timerEndTime - Date.now()) / 1000);
     if (remaining <= 0) {
-      clearInterval(timerInterval);
+      if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
+      releaseWakeLock();
       document.getElementById('timerDisplay').textContent = '0:00';
       updateRing(0);
       setTimeout(showDone, 300);
@@ -413,7 +485,8 @@
      Done screen
   ───────────────────────────────────── */
   function showDone() {
-    selectedStar = 0;
+    selectedStar  = 0;
+    _surveySent   = false;   // reset for new session
     document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('lit'));
     document.getElementById('surveyComment').value = '';
     document.getElementById('surveyForm').style.display = '';
@@ -437,8 +510,8 @@
      Submit via EmailJS
   ───────────────────────────────────── */
   async function submitSurvey() {
+    // ① Star required — shake if missing
     if (selectedStar === 0) {
-      // Shake stars
       const row = document.getElementById('starsRow');
       [6, -6, 4, -4, 0].forEach((x, i) => {
         setTimeout(() => { row.style.transform = `translateX(${x}px)`; }, i * 60);
@@ -446,21 +519,40 @@
       return;
     }
 
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
+    // ② Double-submit guard
+    if (_surveySent) return;
 
-    const comment = document.getElementById('surveyComment').value.trim();
-    const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
-    const mins = Math.round(selectedSecs / 60);
-    const stars = '★'.repeat(selectedStar) + '☆'.repeat(5 - selectedStar);
+    // ③ Rate limiting — prevent spam (30s cooldown)
+    const now = Date.now();
+    if (now - _lastSubmitTime < RATE_LIMIT_MS) {
+      const wait = Math.ceil((RATE_LIMIT_MS - (now - _lastSubmitTime)) / 1000);
+      alert(`Please wait ${wait} seconds before submitting again.`);
+      return;
+    }
+
+    // ④ Sanitize & validate inputs
+    const rawComment = document.getElementById('surveyComment').value;
+    const comment    = sanitizeText(rawComment);
+    const validErr   = validateSurvey(selectedStar, comment);
+    if (validErr) { alert(validErr); return; }
+
+    // ⑤ Lock UI
+    const btn = document.getElementById('submitBtn');
+    btn.disabled  = true;
+    btn.textContent = 'Sending…';
+    _surveySent   = true;
+    _lastSubmitTime = now;
+
+    const timestamp = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
+    const mins      = Math.round(selectedSecs / 60);
+    const starsStr  = '★'.repeat(selectedStar) + '☆'.repeat(5 - selectedStar);
 
     const templateParams = {
       to_email: 'koki74497@gmail.com',
-      rating:   `${stars}  (${selectedStar} / 5)`,
+      rating:   `${starsStr}  (${selectedStar} / 5)`,
       duration: `${mins} min`,
       comment:  comment || '(No comment)',
-      sent_at:  now,
+      sent_at:  timestamp,
     };
 
     try {
@@ -468,18 +560,39 @@
       document.getElementById('surveyForm').style.display = 'none';
       document.getElementById('surveySent').style.display = 'block';
     } catch(err) {
-      console.error('EmailJS error:', err);
-      btn.disabled = false;
+      // Allow retry on failure
+      _surveySent = false;
+      btn.disabled  = false;
       btn.textContent = 'Try again';
-      alert('Failed to send. Please check your EmailJS configuration.\n\n' + err);
+      console.error('EmailJS error:', err);
+      alert('Failed to send. Please try again.');
     }
+  }
+
+  /* ─────────────────────────────────────
+     Wake Lock helpers
+     Keeps the screen on so the timer stays
+     accurate even when the phone would sleep.
+     (Supported browsers only — fails silently)
+  ───────────────────────────────────── */
+  async function acquireWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch(e) { /* not supported or denied — timer still uses wall-clock */ }
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
   }
 
   /* ─────────────────────────────────────
      Restart
   ───────────────────────────────────── */
   function restartApp() {
-    clearInterval(timerInterval);
+    if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
+    releaseWakeLock();
     timerEndTime = null;
     selectTimer(600);
     showScreen('screen-welcome');
