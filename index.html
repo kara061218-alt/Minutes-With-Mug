@@ -3,15 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<!-- CSP: only allow scripts/styles from self and known CDNs -->
-<meta http-equiv="Content-Security-Policy"
-  content="default-src 'self';
-           script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com;
-           style-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
-           font-src   https://fonts.gstatic.com;
-           connect-src https://api.emailjs.com;
-           worker-src blob:;
-           img-src 'self' data:;">
 <title>Minutes With Cafe</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -203,20 +194,20 @@
   <p class="welcome-desc">Put your phone down.<br>Enjoy the scent of your coffee.<br>Your time, your pace.</p>
   <p class="timer-select-label">How long would you like?</p>
   <div class="timer-options">
-    <div class="timer-option small" data-secs="300" onclick="selectTimer(300)">
+    <div class="timer-option small" data-secs="300">
       <div class="timer-card"><div class="timer-mins">5</div><div class="timer-unit">min</div></div>
     </div>
-    <div class="timer-option large selected" data-secs="600" onclick="selectTimer(600)">
+    <div class="timer-option large selected" data-secs="600">
       <div class="timer-card">
         <span class="recommended-badge">✦ recommended</span>
         <div class="timer-mins">10</div><div class="timer-unit">min</div>
       </div>
     </div>
-    <div class="timer-option small" data-secs="900" onclick="selectTimer(900)">
+    <div class="timer-option small" data-secs="900">
       <div class="timer-card"><div class="timer-mins">15</div><div class="timer-unit">min</div></div>
     </div>
   </div>
-  <button class="start-btn" onclick="startTimer()">Start the timer</button>
+  <button class="start-btn" id="startBtn">Start the timer</button>
 </div>
 
 <!-- ══ SCREEN 2 · TIMER ══ -->
@@ -258,11 +249,11 @@
     <p class="survey-q">Was it a good experience?</p>
 
     <div class="stars-row" id="starsRow">
-      <button class="star-btn" data-val="1" onclick="setStar(1)">★</button>
-      <button class="star-btn" data-val="2" onclick="setStar(2)">★</button>
-      <button class="star-btn" data-val="3" onclick="setStar(3)">★</button>
-      <button class="star-btn" data-val="4" onclick="setStar(4)">★</button>
-      <button class="star-btn" data-val="5" onclick="setStar(5)">★</button>
+      <button class="star-btn" data-val="1">★</button>
+      <button class="star-btn" data-val="2">★</button>
+      <button class="star-btn" data-val="3">★</button>
+      <button class="star-btn" data-val="4">★</button>
+      <button class="star-btn" data-val="5">★</button>
     </div>
 
     <p class="survey-comment-label">Comments &amp; suggestions <span style="opacity:.5;font-size:.85em;text-transform:none;letter-spacing:0">(optional)</span></p>
@@ -270,7 +261,7 @@
       placeholder="Feel free to share anything…" maxlength="500"></textarea>
 
     <div id="surveyForm" style="width:100%">
-      <button class="submit-btn" id="submitBtn" onclick="submitSurvey()">Send feedback</button>
+      <button class="submit-btn" id="submitBtn">Send feedback</button>
     </div>
 
     <div class="survey-sent" id="surveySent">
@@ -278,7 +269,7 @@
       <p class="survey-sent-msg">Thank you for sharing.<br>Your feedback means a lot to us.</p>
     </div>
 
-    <button class="restart-btn" onclick="restartApp()">Take another break →</button>
+    <button class="restart-btn" id="restartBtn">Take another break →</button>
   </div>
 </div>
 
@@ -628,9 +619,39 @@
     showScreen('screen-welcome');
   }
 
-  /* Touch scroll lock */
-  ['screen-welcome','screen-timer'].forEach(id => {
-    document.getElementById(id).addEventListener('touchmove', e => e.preventDefault(), { passive:false });
+  /* ─────────────────────────────────────
+     Bind all event listeners (no inline onclick)
+  ───────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function() {
+    // Timer option selection
+    document.querySelectorAll('.timer-option').forEach(function(el) {
+      el.addEventListener('click', function() {
+        selectTimer(parseInt(el.dataset.secs));
+      });
+    });
+
+    // Start button
+    document.getElementById('startBtn').addEventListener('click', startTimer);
+
+    // Star rating
+    document.querySelectorAll('.star-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        setStar(parseInt(btn.dataset.val));
+      });
+    });
+
+    // Submit survey
+    document.getElementById('submitBtn').addEventListener('click', submitSurvey);
+
+    // Restart
+    document.getElementById('restartBtn').addEventListener('click', restartApp);
+
+    // Touch scroll lock on non-scrollable screens
+    ['screen-welcome','screen-timer'].forEach(function(id) {
+      document.getElementById(id).addEventListener('touchmove', function(e) {
+        e.preventDefault();
+      }, { passive: false });
+    });
   });
 </script>
 </body>
