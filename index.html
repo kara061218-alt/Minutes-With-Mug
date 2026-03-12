@@ -10,6 +10,7 @@
            style-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
            font-src   https://fonts.gstatic.com;
            connect-src https://api.emailjs.com;
+           worker-src blob:;
            img-src 'self' data:;">
 <title>Minutes With Cafe</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
@@ -441,22 +442,32 @@
     // Kill any previous worker
     if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
 
-    timerWorker = createTimerWorker();
-    timerWorker.onmessage = function(e) {
-      const remaining = e.data.remaining;
-      if (remaining <= 0) {
-        timerWorker.terminate(); timerWorker = null;
-        releaseWakeLock();
-        document.getElementById('timerDisplay').textContent = '0:00';
-        updateRing(0);
-        setTimeout(showDone, 700);
-        return;
-      }
-      document.getElementById('timerDisplay').textContent = formatTime(remaining);
-      updateRing(remaining);
-      updateMessage(remaining);
-    };
-    timerWorker.postMessage({ type: 'start', endTime: timerEndTime });
+    try {
+      timerWorker = createTimerWorker();
+      timerWorker.onmessage = function(e) {
+        const remaining = e.data.remaining;
+        if (remaining <= 0) {
+          timerWorker.terminate(); timerWorker = null;
+          releaseWakeLock();
+          document.getElementById('timerDisplay').textContent = '0:00';
+          updateRing(0);
+          setTimeout(showDone, 700);
+          return;
+        }
+        document.getElementById('timerDisplay').textContent = formatTime(remaining);
+        updateRing(remaining);
+        updateMessage(remaining);
+      };
+      timerWorker.onerror = function() {
+        // Worker failed — fall back to setInterval
+        timerWorker = null;
+        startFallbackInterval();
+      };
+      timerWorker.postMessage({ type: 'start', endTime: timerEndTime });
+    } catch(e) {
+      // blob: Worker not supported — use setInterval fallback
+      startFallbackInterval();
+    }
 
     document.removeEventListener('visibilitychange', onVisibilityChange);
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -470,6 +481,7 @@
     const remaining = Math.round((timerEndTime - Date.now()) / 1000);
     if (remaining <= 0) {
       if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
+      clearInterval(_fallbackInterval);
       releaseWakeLock();
       document.getElementById('timerDisplay').textContent = '0:00';
       updateRing(0);
@@ -569,8 +581,25 @@
     }
   }
 
-  /* ─────────────────────────────────────
-     Wake Lock helpers
+  /* setInterval fallback (wall-clock based) */
+  let _fallbackInterval = null;
+  function startFallbackInterval() {
+    clearInterval(_fallbackInterval);
+    _fallbackInterval = setInterval(function() {
+      const remaining = Math.round((timerEndTime - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(_fallbackInterval);
+        releaseWakeLock();
+        document.getElementById('timerDisplay').textContent = '0:00';
+        updateRing(0);
+        setTimeout(showDone, 700);
+        return;
+      }
+      document.getElementById('timerDisplay').textContent = formatTime(remaining);
+      updateRing(remaining);
+      updateMessage(remaining);
+    }, 500);
+  }
      Keeps the screen on so the timer stays
      accurate even when the phone would sleep.
      (Supported browsers only — fails silently)
@@ -592,6 +621,7 @@
   ───────────────────────────────────── */
   function restartApp() {
     if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
+    clearInterval(_fallbackInterval);
     releaseWakeLock();
     timerEndTime = null;
     selectTimer(600);
