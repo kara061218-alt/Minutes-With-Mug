@@ -5,163 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Minutes With Cafe</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
-  :root {
-    --cream: #F5EFE0;
-    --warm-white: #FBF7EF;
-    --coffee: #6B4226;
-    --espresso: #3D2314;
-    --latte: #C49A72;
-    --foam: #EAD9BC;
-    --steam: #D4C4A8;
-    --ink: #2C1F14;
-    --sage: #8B9E7A;
-    --accent: #B56E3F;
-  }
+:root {
+  --cream: #F5EFE0;
+  --warm-white: #FBF7EF;
+  --coffee: #6B4226;
+  --espresso: #3D2314;
+  --latte: #C49A72;
+  --foam: #EAD9BC;
+  --steam: #D4C4A8;
+  --ink: #2C1F14;
+  --sage: #8B9E7A;
+  --accent: #B56E3F;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; }
+body { background:var(--cream); font-family:'Lora',serif; color:var(--ink); }
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:999; opacity:.6;
+}
+.screen {
+  position:fixed; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:2rem;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.85s cubic-bezier(0.4,0,0.2,1);
+}
+.screen.active { opacity:1; pointer-events:all; }
 
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; overflow:hidden; }
-  body { background:var(--cream); font-family:'Lora',serif; color:var(--ink); }
+/* ── WELCOME ── */
+#screen-welcome { background:var(--warm-white); }
+.site-title { font-family:'Playfair Display',serif; font-weight:700; font-size:1.1rem; letter-spacing:.06em; color:var(--espresso); margin-bottom:1.4rem; text-align:center; }
+.coffee-cup { width:88px; height:88px; margin-bottom:1.4rem; }
+.cup-svg { width:100%; height:100%; animation:float 4s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+.steam-line { animation:steam-rise 2.5s ease-in-out infinite; transform-origin:bottom center; opacity:0; }
+.steam-line:nth-child(1){animation-delay:0s}
+.steam-line:nth-child(2){animation-delay:.5s}
+.steam-line:nth-child(3){animation-delay:1s}
+@keyframes steam-rise {
+  0%{transform:translateY(0) scaleX(1);opacity:0} 30%{opacity:.7} 70%{opacity:.3}
+  100%{transform:translateY(-28px) scaleX(1.4);opacity:0}
+}
+.welcome-title { font-family:'Playfair Display',serif; font-size:2.3rem; font-weight:700; color:var(--espresso); line-height:1.2; text-align:center; margin-bottom:.4rem; }
+.welcome-title span { color:var(--accent); }
+.welcome-desc { font-size:.82rem; color:var(--coffee); text-align:center; line-height:1.9; margin-bottom:1.8rem; max-width:265px; opacity:.75; }
+.timer-select-label { font-size:.67rem; letter-spacing:.22em; text-transform:uppercase; color:var(--latte); margin-bottom:.9rem; }
+.timer-options { display:flex; align-items:flex-end; gap:.75rem; margin-bottom:1.7rem; }
+.timer-option { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform .15s; }
+.timer-option:active { transform:scale(.94); }
+.timer-card { background:var(--cream); border:1.5px solid var(--foam); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:border-color .2s, box-shadow .2s, background .2s; }
+.timer-option.small .timer-card { width:74px; height:84px; padding:.7rem .4rem 1rem; }
+.timer-option.large .timer-card { width:94px; height:110px; padding:.9rem .4rem 1.1rem; border-color:rgba(196,154,114,.6); box-shadow:0 4px 16px rgba(107,66,38,.12); }
+.timer-option.selected .timer-card { border-color:var(--accent); background:rgba(181,110,63,.07); box-shadow:0 5px 20px rgba(181,110,63,.2); }
+.timer-option.selected .timer-card::after { content:''; position:absolute; bottom:7px; width:5px; height:5px; border-radius:50%; background:var(--accent); }
+.timer-mins { font-family:'Playfair Display',serif; font-weight:700; color:var(--espresso); line-height:1; margin-bottom:.2rem; }
+.timer-option.small .timer-mins { font-size:1.6rem; }
+.timer-option.large .timer-mins { font-size:2rem; }
+.timer-unit { font-size:.6rem; letter-spacing:.13em; text-transform:uppercase; color:var(--latte); }
+.timer-option.large .timer-unit { font-size:.65rem; }
+.recommended-badge { position:absolute; top:-11px; background:var(--accent); color:white; font-size:.5rem; letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+.start-btn { background:var(--espresso); color:var(--cream); border:none; padding:1rem 2.7rem; font-family:'Lora',serif; font-size:.93rem; letter-spacing:.1em; cursor:pointer; border-radius:2px; box-shadow:0 4px 20px rgba(61,35,20,.25); transition:transform .15s; }
+.start-btn:active { transform:scale(.97); }
+.corner-deco { position:fixed; width:80px; height:80px; opacity:.12; pointer-events:none; }
+.corner-deco.tl{top:0;left:0} .corner-deco.tr{top:0;right:0;transform:scaleX(-1)}
+.corner-deco.bl{bottom:0;left:0;transform:scaleY(-1)} .corner-deco.br{bottom:0;right:0;transform:scale(-1,-1)}
 
-  body::before {
-    content:''; position:fixed; inset:0;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events:none; z-index:999; opacity:.6;
-  }
+/* ── TIMER ── */
+#screen-timer { background:var(--espresso); }
+#screen-timer::after { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 40%, rgba(107,66,38,.5) 0%, transparent 70%); pointer-events:none; }
+.timer-header { font-size:.67rem; letter-spacing:.3em; color:var(--latte); text-transform:uppercase; margin-bottom:2.2rem; opacity:.6; }
+.timer-ring-wrapper { position:relative; margin-bottom:1.8rem; }
+.timer-ring { transform:rotate(-90deg); }
+.ring-bg { fill:none; stroke:rgba(196,154,114,.15); stroke-width:3; }
+.ring-progress { fill:none; stroke:var(--latte); stroke-width:3; stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
+.timer-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.timer-display { font-family:'Playfair Display',serif; font-size:3.7rem; font-weight:600; color:var(--cream); letter-spacing:.05em; line-height:1; }
+.timer-label { font-size:.62rem; letter-spacing:.2em; color:var(--latte); margin-top:.3rem; opacity:.65; text-transform:uppercase; }
+.timer-message { font-size:.97rem; color:var(--foam); text-align:center; line-height:2.2; max-width:275px; opacity:.75; margin-bottom:1.5rem; font-style:italic; }
+.ambient-dots { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+.dot { position:absolute; border-radius:50%; background:rgba(196,154,114,.15); animation:drift linear infinite; }
+@keyframes drift { 0%{transform:translateY(100vh) scale(0);opacity:0} 10%{opacity:1} 90%{opacity:.5} 100%{transform:translateY(-10vh) scale(1);opacity:0} }
 
-  .screen {
-    position:fixed; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; padding:2rem;
-    opacity:0; pointer-events:none;
-    transition:opacity 0.85s cubic-bezier(0.4,0,0.2,1);
-  }
-  .screen.active { opacity:1; pointer-events:all; }
-
-  /* ━━ SCREEN 1 · WELCOME ━━ */
-  #screen-welcome { background:var(--warm-white); }
-
-  .site-title { font-family:'Playfair Display',serif; font-weight:700; font-size:1.1rem; letter-spacing:0.06em; color:var(--espresso); margin-bottom:0.2rem; text-align:center; }
-  .cafe-wordmark { font-family:'Lora',serif; font-style:italic; font-size:0.62rem; letter-spacing:0.12em; color:var(--steam); margin-bottom:1.4rem; text-align:center; }
-  .coffee-cup { width:88px; height:88px; margin-bottom:1.4rem; }
-  .cup-svg { width:100%; height:100%; animation:float 4s ease-in-out infinite; }
-  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-  .steam-line { animation:steam-rise 2.5s ease-in-out infinite; transform-origin:bottom center; opacity:0; }
-  .steam-line:nth-child(1){animation-delay:0s} .steam-line:nth-child(2){animation-delay:.5s} .steam-line:nth-child(3){animation-delay:1s}
-  @keyframes steam-rise { 0%{transform:translateY(0) scaleX(1);opacity:0} 30%{opacity:.7} 70%{opacity:.3} 100%{transform:translateY(-28px) scaleX(1.4);opacity:0} }
-
-  .welcome-title { font-family:'Playfair Display',serif; font-size:2.3rem; font-weight:700; color:var(--espresso); line-height:1.2; text-align:center; margin-bottom:.4rem; }
-  .welcome-title span { color:var(--accent); }
-  .welcome-desc { font-size:.82rem; color:var(--coffee); text-align:center; line-height:1.9; margin-bottom:1.8rem; max-width:265px; opacity:.75; }
-  .timer-select-label { font-size:.67rem; letter-spacing:.22em; text-transform:uppercase; color:var(--latte); margin-bottom:.9rem; }
-  .timer-options { display:flex; align-items:flex-end; gap:.75rem; margin-bottom:1.7rem; }
-  .timer-option { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform .15s; }
-  .timer-option:active { transform:scale(.94); }
-  .timer-card { background:var(--cream); border:1.5px solid var(--foam); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:border-color .2s, box-shadow .2s, background .2s; }
-  .timer-option.small .timer-card { width:74px; height:84px; padding:.7rem .4rem 1rem; }
-  .timer-option.large .timer-card { width:94px; height:110px; padding:.9rem .4rem 1.1rem; border-color:rgba(196,154,114,.6); box-shadow:0 4px 16px rgba(107,66,38,.12); }
-  .timer-option.selected .timer-card { border-color:var(--accent); background:rgba(181,110,63,.07); box-shadow:0 5px 20px rgba(181,110,63,.2); }
-  .timer-option.selected .timer-card::after { content:''; position:absolute; bottom:7px; width:5px; height:5px; border-radius:50%; background:var(--accent); }
-  .timer-mins { font-family:'Playfair Display',serif; font-weight:700; color:var(--espresso); line-height:1; margin-bottom:.2rem; }
-  .timer-option.small .timer-mins { font-size:1.6rem; }
-  .timer-option.large .timer-mins { font-size:2rem; }
-  .timer-unit { font-size:.6rem; letter-spacing:.13em; text-transform:uppercase; color:var(--latte); }
-  .timer-option.large .timer-unit { font-size:.65rem; }
-  .recommended-badge { position:absolute; top:-11px; background:var(--accent); color:white; font-size:.5rem; letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:20px; white-space:nowrap; }
-  .start-btn { background:var(--espresso); color:var(--cream); border:none; padding:1rem 2.7rem; font-family:'Lora',serif; font-size:.93rem; letter-spacing:.1em; cursor:pointer; border-radius:2px; box-shadow:0 4px 20px rgba(61,35,20,.25); transition:transform .15s; }
-  .start-btn:active { transform:scale(.97); }
-
-  .corner-deco { position:fixed; width:80px; height:80px; opacity:.12; pointer-events:none; }
-  .corner-deco.tl{top:0;left:0} .corner-deco.tr{top:0;right:0;transform:scaleX(-1)}
-  .corner-deco.bl{bottom:0;left:0;transform:scaleY(-1)} .corner-deco.br{bottom:0;right:0;transform:scale(-1,-1)}
-
-  /* ━━ SCREEN 2 · TIMER ━━ */
-  #screen-timer { background:var(--espresso); }
-  #screen-timer::after { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 40%, rgba(107,66,38,.5) 0%, transparent 70%); pointer-events:none; }
-  .timer-cafe-name { font-family:'Playfair Display',serif; font-style:italic; font-size:.7rem; color:var(--latte); opacity:.45; letter-spacing:.1em; margin-bottom:.25rem; }
-  .timer-header { font-size:.67rem; letter-spacing:.3em; color:var(--latte); text-transform:uppercase; margin-bottom:2.2rem; opacity:.6; }
-  .timer-ring-wrapper { position:relative; margin-bottom:1.8rem; }
-  .timer-ring { transform:rotate(-90deg); }
-  .ring-bg { fill:none; stroke:rgba(196,154,114,.15); stroke-width:3; }
-  .ring-progress { fill:none; stroke:var(--latte); stroke-width:3; stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
-  .timer-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-  .timer-display { font-family:'Playfair Display',serif; font-size:3.7rem; font-weight:600; color:var(--cream); letter-spacing:.05em; line-height:1; }
-  .timer-label { font-size:.62rem; letter-spacing:.2em; color:var(--latte); margin-top:.3rem; opacity:.65; text-transform:uppercase; }
-  .timer-message { font-size:.97rem; color:var(--foam); text-align:center; line-height:2.2; max-width:275px; opacity:.75; margin-bottom:1.5rem; font-style:italic; }
-  .ambient-dots { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
-  .dot { position:absolute; border-radius:50%; background:rgba(196,154,114,.15); animation:drift linear infinite; }
-  @keyframes drift { 0%{transform:translateY(100vh) scale(0);opacity:0} 10%{opacity:1} 90%{opacity:.5} 100%{transform:translateY(-10vh) scale(1);opacity:0} }
-
-  /* ━━ SCREEN 3 · DONE + SURVEY ━━ */
-  #screen-done { background:var(--warm-white); justify-content:flex-start; padding:0; overflow-y:auto; }
-
-  .done-hero {
-    width:100%; background:linear-gradient(160deg,#8B9E7A 0%,#6B8560 100%);
-    padding:3.5rem 2rem 2.8rem; display:flex; flex-direction:column;
-    align-items:center; flex-shrink:0;
-  }
-  .done-check {
-    width:68px; height:68px; border:2px solid rgba(245,239,224,.4); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; margin-bottom:1.2rem;
-    animation:pulse-ring 2.5s ease-in-out infinite;
-  }
-  @keyframes pulse-ring { 0%,100%{box-shadow:0 0 0 0 rgba(245,239,224,.2)} 50%{box-shadow:0 0 0 16px rgba(245,239,224,0)} }
-  .done-badge { font-size:.6rem; letter-spacing:.28em; text-transform:uppercase; color:rgba(245,239,224,.5); margin-bottom:.7rem; }
-  .done-title { font-family:'Playfair Display',serif; font-size:2.8rem; font-weight:700; color:var(--cream); margin-bottom:.55rem; letter-spacing:.04em; }
-  .done-sub { font-size:1rem; color:rgba(245,239,224,.85); font-style:italic; }
-
-  .survey-section {
-    width:100%; max-width:400px; padding:2.2rem 1.5rem 4rem;
-    display:flex; flex-direction:column; align-items:center;
-    margin:0 auto;
-  }
-  .survey-divider { display:flex; align-items:center; gap:.7rem; width:100%; margin-bottom:2rem; }
-  .survey-divider-line { flex:1; height:1px; background:var(--foam); }
-  .survey-divider-text { font-size:.62rem; letter-spacing:.22em; text-transform:uppercase; color:var(--latte); white-space:nowrap; }
-
-  .survey-q { font-family:'Playfair Display',serif; font-size:1.18rem; color:var(--espresso); text-align:center; margin-bottom:1.5rem; line-height:1.5; }
-
-  .stars-row { display:flex; gap:.5rem; margin-bottom:2rem; }
-  .star-btn {
-    background:none; border:none; cursor:pointer;
-    font-size:2.4rem; line-height:1;
-    transition:transform .12s;
-    color:#D4C4A8;
-  }
-  .star-btn.lit { color:#C49A72; }
-  .star-btn:active { transform:scale(.85); }
-
-  .survey-comment-label { font-size:.67rem; letter-spacing:.18em; text-transform:uppercase; color:var(--latte); align-self:flex-start; margin-bottom:.6rem; }
-  .survey-textarea {
-    width:100%; min-height:110px; border:1.5px solid var(--foam); border-radius:4px;
-    background:var(--cream); font-family:'Lora',serif; font-size:.88rem; color:var(--ink);
-    line-height:1.85; padding:.85rem 1rem; resize:none; outline:none;
-    caret-color:var(--accent); margin-bottom:1.5rem; transition:border-color .2s;
-  }
-  .survey-textarea:focus { border-color:var(--latte); }
-  .survey-textarea::placeholder { color:var(--steam); font-style:italic; }
-
-  .submit-btn {
-    width:100%; background:var(--espresso); color:var(--cream); border:none;
-    padding:1rem; font-family:'Lora',serif; font-size:.93rem; letter-spacing:.1em;
-    cursor:pointer; border-radius:2px; box-shadow:0 4px 18px rgba(61,35,20,.22);
-    transition:transform .15s, opacity .2s;
-  }
-  .submit-btn:active { transform:scale(.97); }
-  .submit-btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
-
-  .survey-sent { text-align:center; padding:1.2rem 0; display:none; }
-  .survey-sent-icon { font-size:2rem; margin-bottom:.6rem; display:block; }
-  .survey-sent-msg { font-size:.87rem; color:var(--coffee); line-height:2.1; font-style:italic; opacity:.8; }
-
-  .done-stamp { font-size:.6rem; letter-spacing:.2em; text-transform:uppercase; color:var(--steam); margin-top:1.8rem; }
-  .restart-btn {
-    margin-top:1rem; background:transparent; color:var(--latte);
-    border:1.5px solid var(--foam); padding:.7rem 2rem;
-    font-family:'Lora',serif; font-size:.8rem; letter-spacing:.1em;
-    cursor:pointer; border-radius:2px; transition:border-color .2s, color .2s;
-  }
-  .restart-btn:active { border-color:var(--accent); color:var(--accent); }
+/* ── DONE + SURVEY ── */
+#screen-done { background:var(--warm-white); justify-content:flex-start; padding:0; overflow-y:auto; }
+.done-hero { width:100%; background:linear-gradient(160deg,#8B9E7A 0%,#6B8560 100%); padding:3.5rem 2rem 2.8rem; display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+.done-check { width:68px; height:68px; border:2px solid rgba(245,239,224,.4); border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:1.2rem; animation:pulse-ring 2.5s ease-in-out infinite; }
+@keyframes pulse-ring { 0%,100%{box-shadow:0 0 0 0 rgba(245,239,224,.2)} 50%{box-shadow:0 0 0 16px rgba(245,239,224,0)} }
+.done-title { font-family:'Playfair Display',serif; font-size:2.8rem; font-weight:700; color:var(--cream); margin-bottom:.55rem; letter-spacing:.04em; }
+.done-sub { font-size:1rem; color:rgba(245,239,224,.85); font-style:italic; }
+.survey-section { width:100%; max-width:400px; padding:2.2rem 1.5rem 4rem; display:flex; flex-direction:column; align-items:center; margin:0 auto; }
+.survey-divider { display:flex; align-items:center; gap:.7rem; width:100%; margin-bottom:2rem; }
+.survey-divider-line { flex:1; height:1px; background:var(--foam); }
+.survey-divider-text { font-size:.62rem; letter-spacing:.22em; text-transform:uppercase; color:var(--latte); white-space:nowrap; }
+.survey-q { font-family:'Playfair Display',serif; font-size:1.18rem; color:var(--espresso); text-align:center; margin-bottom:1.5rem; line-height:1.5; }
+.stars-row { display:flex; gap:.5rem; margin-bottom:2rem; }
+.star-btn { background:none; border:none; cursor:pointer; font-size:2.4rem; line-height:1; transition:transform .12s; color:#D4C4A8; }
+.star-btn.lit { color:#C49A72; }
+.star-btn:active { transform:scale(.85); }
+.survey-comment-label { font-size:.67rem; letter-spacing:.18em; text-transform:uppercase; color:var(--latte); align-self:flex-start; margin-bottom:.6rem; }
+.survey-textarea { width:100%; min-height:110px; border:1.5px solid var(--foam); border-radius:4px; background:var(--cream); font-family:'Lora',serif; font-size:.88rem; color:var(--ink); line-height:1.85; padding:.85rem 1rem; resize:none; outline:none; caret-color:var(--accent); margin-bottom:1.5rem; transition:border-color .2s; }
+.survey-textarea:focus { border-color:var(--latte); }
+.survey-textarea::placeholder { color:var(--steam); font-style:italic; }
+.submit-btn { width:100%; background:var(--espresso); color:var(--cream); border:none; padding:1rem; font-family:'Lora',serif; font-size:.93rem; letter-spacing:.1em; cursor:pointer; border-radius:2px; box-shadow:0 4px 18px rgba(61,35,20,.22); transition:transform .15s, opacity .2s; }
+.submit-btn:active { transform:scale(.97); }
+.submit-btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+.survey-sent { text-align:center; padding:1.2rem 0; display:none; }
+.survey-sent-icon { font-size:2rem; margin-bottom:.6rem; display:block; }
+.survey-sent-msg { font-size:.87rem; color:var(--coffee); line-height:2.1; font-style:italic; opacity:.8; }
+.restart-btn { margin-top:1.6rem; background:transparent; color:var(--latte); border:1.5px solid var(--foam); padding:.7rem 2rem; font-family:'Lora',serif; font-size:.8rem; letter-spacing:.1em; cursor:pointer; border-radius:2px; transition:border-color .2s, color .2s; }
+.restart-btn:active { border-color:var(--accent); color:var(--accent); }
 </style>
 </head>
 <body>
@@ -171,7 +125,7 @@
 <svg class="corner-deco bl" viewBox="0 0 80 80" fill="none"><path d="M0,0 Q40,0 40,40 Q40,0 80,0" stroke="#6B4226" stroke-width="1" fill="none"/><path d="M0,20 Q20,20 20,40" stroke="#6B4226" stroke-width=".8" fill="none"/><circle cx="10" cy="10" r="2" fill="#6B4226"/></svg>
 <svg class="corner-deco br" viewBox="0 0 80 80" fill="none"><path d="M0,0 Q40,0 40,40 Q40,0 80,0" stroke="#6B4226" stroke-width="1" fill="none"/><path d="M0,20 Q20,20 20,40" stroke="#6B4226" stroke-width=".8" fill="none"/><circle cx="10" cy="10" r="2" fill="#6B4226"/></svg>
 
-<!-- ══ SCREEN 1 · WELCOME ══ -->
+<!-- SCREEN 1: WELCOME -->
 <div id="screen-welcome" class="screen active">
   <p class="site-title">Minutes With Cafe</p>
   <div class="coffee-cup">
@@ -207,10 +161,10 @@
       <div class="timer-card"><div class="timer-mins">15</div><div class="timer-unit">min</div></div>
     </div>
   </div>
-  <button class="start-btn" id="startBtn">Start the timer</button>
+  <button class="start-btn" id="btnStart">Start the timer</button>
 </div>
 
-<!-- ══ SCREEN 2 · TIMER ══ -->
+<!-- SCREEN 2: TIMER -->
 <div id="screen-timer" class="screen">
   <div class="ambient-dots" id="ambientDots"></div>
   <p class="timer-header">your slow moment</p>
@@ -227,7 +181,7 @@
   <p class="timer-message" id="timerMessage">Take a deep breath.<br>You've got nowhere to be.</p>
 </div>
 
-<!-- ══ SCREEN 3 · DONE + SURVEY ══ -->
+<!-- SCREEN 3: DONE + SURVEY -->
 <div id="screen-done" class="screen">
   <div class="done-hero">
     <div class="done-check">
@@ -238,16 +192,13 @@
     <h2 class="done-title">Done.</h2>
     <p class="done-sub">Have a good day! ☕</p>
   </div>
-
   <div class="survey-section">
     <div class="survey-divider">
       <div class="survey-divider-line"></div>
       <span class="survey-divider-text">Quick feedback</span>
       <div class="survey-divider-line"></div>
     </div>
-
     <p class="survey-q">Was it a good experience?</p>
-
     <div class="stars-row" id="starsRow">
       <button class="star-btn" data-val="1">★</button>
       <button class="star-btn" data-val="2">★</button>
@@ -255,404 +206,274 @@
       <button class="star-btn" data-val="4">★</button>
       <button class="star-btn" data-val="5">★</button>
     </div>
-
     <p class="survey-comment-label">Comments &amp; suggestions <span style="opacity:.5;font-size:.85em;text-transform:none;letter-spacing:0">(optional)</span></p>
-    <textarea class="survey-textarea" id="surveyComment"
-      placeholder="Feel free to share anything…" maxlength="500"></textarea>
-
+    <textarea class="survey-textarea" id="surveyComment" placeholder="Feel free to share anything…" maxlength="500"></textarea>
     <div id="surveyForm" style="width:100%">
-      <button class="submit-btn" id="submitBtn">Send feedback</button>
+      <button class="submit-btn" id="btnSubmit">Send feedback</button>
     </div>
-
     <div class="survey-sent" id="surveySent">
       <span class="survey-sent-icon">🌿</span>
       <p class="survey-sent-msg">Thank you for sharing.<br>Your feedback means a lot to us.</p>
     </div>
-
-    <button class="restart-btn" id="restartBtn">Take another break →</button>
+    <button class="restart-btn" id="btnRestart">Take another break →</button>
   </div>
 </div>
 
+<!-- EmailJS loaded at bottom of body so DOM is ready first -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-  /* ─────────────────────────────────────
-     ★ EmailJS CONFIG
-     Template variables: {{rating}} {{duration}} {{comment}} {{sent_at}}
-     Recipient: koki74497@gmail.com
-  ───────────────────────────────────── */
-  const EMAILJS_PUBLIC_KEY  = 'yJJhhfeUAZiSV2m8A';
-  const EMAILJS_SERVICE_ID  = 'service_hktb40l';
-  const EMAILJS_TEMPLATE_ID = 'template_phcs2vx';
+(function() {
+  /* ── EmailJS ── */
+  const EJ_KEY      = 'yJJhhfeUAZiSV2m8A';
+  const EJ_SERVICE  = 'service_hktb40l';
+  const EJ_TEMPLATE = 'template_phcs2vx';
+  emailjs.init({ publicKey: EJ_KEY });
 
-  // Use object-form init (EmailJS v4 recommended)
-  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  /* ── State ── */
+  var selectedSecs  = 600;
+  var TIMER_SECS    = 600;
+  var timerEndTime  = null;
+  var tickInterval  = null;
+  var selectedStar  = 0;
+  var wakeLock      = null;
+  var surveySent    = false;
+  var lastSubmitAt  = 0;
+  var lastMsg       = '';
+  var CIRC          = 628.3;
+  var RATE_MS       = 30000;
 
-  /* ─────────────────────────────────────
-     App state
-  ───────────────────────────────────── */
-  let selectedSecs  = 600;
-  let TIMER_SECONDS = 600;
-  let timerWorker   = null;   // Web Worker for background-safe ticking
-  let timerEndTime  = null;
-  let selectedStar  = 0;
-  let wakeLock      = null;
-  const circumference = 628.3;
+  var MESSAGES = [
+    { ratio:1.0,  text:"Take a deep breath.<br>You've got nowhere to be." },
+    { ratio:0.7,  text:"Let the warmth<br>of the cup sink in." },
+    { ratio:0.35, text:"Right here.<br>Right now." },
+    { ratio:0.1,  text:"Almost there." }
+  ];
 
-  /* ─────────────────────────────────────
-     Security state
-  ───────────────────────────────────── */
-  let _surveySent      = false;
-  let _lastSubmitTime  = 0;
-  const RATE_LIMIT_MS  = 30000;
-  const MAX_COMMENT    = 500;
-  const ALLOWED_STARS  = [1,2,3,4,5];
+  /* ── Helpers ── */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    var el = document.getElementById(id);
+    el.classList.add('active');
+    try { el.scrollTo(0, 0); } catch(e) {}
+  }
 
-  function sanitizeText(str) {
-    return String(str)
-      .slice(0, MAX_COMMENT)
-      .replace(/[<>"'`]/g, c => ({ '<':'＜','>':'＞','"':'＂',"'":'＇','`':'｀' }[c]))
+  function fmt(s) {
+    var c = Math.max(0, s);
+    return c >= 60
+      ? pad(Math.floor(c/60)) + ':' + pad(c % 60)
+      : '0:' + pad(c);
+  }
+  function pad(n) { return n < 10 ? '0'+n : ''+n; }
+
+  function setRing(s) {
+    document.getElementById('ringProgress').style.strokeDashoffset = CIRC * (1 - s / TIMER_SECS);
+  }
+
+  function setMessage(s) {
+    var ratio = s / TIMER_SECS;
+    var chosen = MESSAGES[MESSAGES.length - 1];
+    for (var i = 0; i < MESSAGES.length; i++) {
+      if (ratio <= MESSAGES[i].ratio) { chosen = MESSAGES[i]; break; }
+    }
+    if (chosen.text === lastMsg) return;
+    lastMsg = chosen.text;
+    var el = document.getElementById('timerMessage');
+    el.style.opacity = '0';
+    setTimeout(function() { el.innerHTML = chosen.text; el.style.opacity = '.75'; }, 500);
+  }
+
+  function sanitize(str) {
+    return String(str).slice(0, 500)
+      .replace(/</g,'＜').replace(/>/g,'＞')
+      .replace(/"/g,'＂').replace(/'/g,'＇').replace(/`/g,'｀')
       .trim();
   }
 
-  function validateSurvey(star, comment) {
-    if (!ALLOWED_STARS.includes(star))  return 'Please select a rating.';
-    if (comment.length > MAX_COMMENT)   return `Comment must be ${MAX_COMMENT} characters or fewer.`;
-    return null;
-  }
-
-  const timerMessages = [
-    { ratio:1.0, text:"Take a deep breath.<br>You've got nowhere to be." },
-    { ratio:0.7, text:"Let the warmth<br>of the cup sink in." },
-    { ratio:0.35,text:"Right here.<br>Right now." },
-    { ratio:0.1, text:"Almost there." },
-  ];
-
-  /* ─────────────────────────────────────
-     Web Worker  (inline Blob — no extra file needed)
-     Runs in a separate thread → never throttled by the browser,
-     even when the tab is hidden or the phone screen is locked.
-     It sends the real wall-clock "remaining" each second.
-  ───────────────────────────────────── */
-  function createTimerWorker() {
-    const src = `
-      let endTime = null;
-      let id = null;
-      self.onmessage = function(e) {
-        if (e.data.type === 'start') {
-          endTime = e.data.endTime;
-          clearInterval(id);
-          id = setInterval(function() {
-            const remaining = Math.round((endTime - Date.now()) / 1000);
-            self.postMessage({ remaining: remaining });
-            if (remaining <= 0) clearInterval(id);
-          }, 500);
-        }
-        if (e.data.type === 'stop') {
-          clearInterval(id);
-        }
-      };
-    `;
-    const blob = new Blob([src], { type: 'application/javascript' });
-    return new Worker(URL.createObjectURL(blob));
-  }
-
-  /* ─────────────────────────────────────
-     UI helpers
-  ───────────────────────────────────── */
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const el = document.getElementById(id);
-    el.classList.add('active');
-    try { el.scrollTo(0,0); } catch(e){}
-  }
-
-  function selectTimer(secs) {
-    selectedSecs = secs;
-    document.querySelectorAll('.timer-option').forEach(el => {
-      el.classList.toggle('selected', parseInt(el.dataset.secs) === secs);
-    });
-  }
-
-  function formatTime(s) {
-    const c = Math.max(0, s);
-    return c >= 60
-      ? String(Math.floor(c/60)).padStart(2,'0') + ':' + String(c%60).padStart(2,'0')
-      : '0:' + String(c).padStart(2,'0');
-  }
-
-  function updateRing(s) {
-    document.getElementById('ringProgress').style.strokeDashoffset =
-      circumference * (1 - s / TIMER_SECONDS);
-  }
-
-  let lastMsg = '';
-  function updateMessage(s) {
-    const ratio = s / TIMER_SECONDS;
-    let chosen = timerMessages[timerMessages.length - 1];
-    for (const m of timerMessages) { if (ratio <= m.ratio) { chosen = m; break; } }
-    if (chosen.text !== lastMsg) {
-      lastMsg = chosen.text;
-      const el = document.getElementById('timerMessage');
-      el.style.transition = 'opacity .5s'; el.style.opacity = '0';
-      setTimeout(() => { el.innerHTML = chosen.text; el.style.opacity = '.75'; }, 500);
-    }
-  }
-
-  function createAmbientDots() {
-    const c = document.getElementById('ambientDots'); c.innerHTML = '';
-    for (let i = 0; i < 12; i++) {
-      const d = document.createElement('div'); d.className = 'dot';
-      const sz = Math.random()*40+10;
-      d.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;animation-duration:${Math.random()*20+15}s;animation-delay:${Math.random()*15}s;`;
+  function makeDots() {
+    var c = document.getElementById('ambientDots');
+    c.innerHTML = '';
+    for (var i = 0; i < 12; i++) {
+      var d = document.createElement('div');
+      d.className = 'dot';
+      var sz = Math.random()*40+10;
+      d.style.cssText = 'width:'+sz+'px;height:'+sz+'px;left:'+(Math.random()*100)+'%;'
+        +'animation-duration:'+(Math.random()*20+15)+'s;animation-delay:'+(Math.random()*15)+'s;';
       c.appendChild(d);
     }
   }
 
-  /* ─────────────────────────────────────
-     Timer
-     Layer 1: Web Worker — ticks every 500ms in a separate thread,
-              completely unaffected by tab visibility or battery saver.
-     Layer 2: visibilitychange — instant correction when screen wakes.
-     Layer 3: Screen Wake Lock — tries to keep display on during timer.
-  ───────────────────────────────────── */
-  function startTimer() {
-    TIMER_SECONDS = selectedSecs;
-    lastMsg = '';
-    showScreen('screen-timer');
-    createAmbientDots();
-    acquireWakeLock();
-
-    timerEndTime = Date.now() + TIMER_SECONDS * 1000;
-
-    document.getElementById('timerDisplay').textContent = formatTime(TIMER_SECONDS);
-    const init = timerMessages[0].text;
-    document.getElementById('timerMessage').innerHTML = init;
-    document.getElementById('timerMessage').style.opacity = '.75';
-    lastMsg = init;
-    updateRing(TIMER_SECONDS);
-
-    // Kill any previous worker
-    if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
-
-    try {
-      timerWorker = createTimerWorker();
-      timerWorker.onmessage = function(e) {
-        const remaining = e.data.remaining;
-        if (remaining <= 0) {
-          timerWorker.terminate(); timerWorker = null;
-          releaseWakeLock();
-          document.getElementById('timerDisplay').textContent = '0:00';
-          updateRing(0);
-          setTimeout(showDone, 700);
-          return;
-        }
-        document.getElementById('timerDisplay').textContent = formatTime(remaining);
-        updateRing(remaining);
-        updateMessage(remaining);
-      };
-      timerWorker.onerror = function() {
-        // Worker failed — fall back to setInterval
-        timerWorker = null;
-        startFallbackInterval();
-      };
-      timerWorker.postMessage({ type: 'start', endTime: timerEndTime });
-    } catch(e) {
-      // blob: Worker not supported — use setInterval fallback
-      startFallbackInterval();
-    }
-
-    document.removeEventListener('visibilitychange', onVisibilityChange);
-    document.addEventListener('visibilitychange', onVisibilityChange);
+  /* ── Wake Lock ── */
+  function acquireWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    navigator.wakeLock.request('screen').then(function(wl) {
+      wakeLock = wl;
+      wl.addEventListener('release', function() { wakeLock = null; });
+    }).catch(function() {});
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { try { wakeLock.release(); } catch(e) {} wakeLock = null; }
   }
 
-  function onVisibilityChange() {
+  /* ── Timer ── */
+  function startTimer() {
+    TIMER_SECS   = selectedSecs;
+    timerEndTime = Date.now() + TIMER_SECS * 1000;
+    lastMsg      = '';
+
+    showScreen('screen-timer');
+    makeDots();
+    acquireWakeLock();
+
+    document.getElementById('timerDisplay').textContent = fmt(TIMER_SECS);
+    document.getElementById('timerMessage').innerHTML = MESSAGES[0].text;
+    document.getElementById('timerMessage').style.opacity = '.75';
+    lastMsg = MESSAGES[0].text;
+    setRing(TIMER_SECS);
+
+    clearInterval(tickInterval);
+    tickInterval = setInterval(function() {
+      var rem = Math.round((timerEndTime - Date.now()) / 1000);
+      if (rem <= 0) {
+        clearInterval(tickInterval);
+        releaseWakeLock();
+        document.getElementById('timerDisplay').textContent = '0:00';
+        setRing(0);
+        setTimeout(showDone, 700);
+        return;
+      }
+      document.getElementById('timerDisplay').textContent = fmt(rem);
+      setRing(rem);
+      setMessage(rem);
+    }, 500);
+
+    document.removeEventListener('visibilitychange', onVisible);
+    document.addEventListener('visibilitychange', onVisible);
+  }
+
+  function onVisible() {
     if (document.visibilityState !== 'visible' || !timerEndTime) return;
-    // Re-acquire wake lock if released during sleep
     if (!wakeLock) acquireWakeLock();
-    // Instantly correct the display on screen wake
-    const remaining = Math.round((timerEndTime - Date.now()) / 1000);
-    if (remaining <= 0) {
-      if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
-      clearInterval(_fallbackInterval);
+    var rem = Math.round((timerEndTime - Date.now()) / 1000);
+    if (rem <= 0) {
+      clearInterval(tickInterval);
       releaseWakeLock();
       document.getElementById('timerDisplay').textContent = '0:00';
-      updateRing(0);
+      setRing(0);
       setTimeout(showDone, 300);
       return;
     }
-    document.getElementById('timerDisplay').textContent = formatTime(remaining);
-    updateRing(remaining);
-    updateMessage(remaining);
+    document.getElementById('timerDisplay').textContent = fmt(rem);
+    setRing(rem);
+    setMessage(rem);
   }
 
-  /* ─────────────────────────────────────
-     Done screen
-  ───────────────────────────────────── */
+  /* ── Done screen ── */
   function showDone() {
-    selectedStar  = 0;
-    _surveySent   = false;   // reset for new session
-    document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('lit'));
+    surveySent   = false;
+    selectedStar = 0;
+    document.querySelectorAll('.star-btn').forEach(function(b) { b.classList.remove('lit'); });
     document.getElementById('surveyComment').value = '';
     document.getElementById('surveyForm').style.display = '';
     document.getElementById('surveySent').style.display = 'none';
-    document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtn').textContent = 'Send feedback';
+    document.getElementById('btnSubmit').disabled = false;
+    document.getElementById('btnSubmit').textContent = 'Send feedback';
     showScreen('screen-done');
   }
 
-  /* ─────────────────────────────────────
-     Stars
-  ───────────────────────────────────── */
+  /* ── Stars ── */
   function setStar(val) {
     selectedStar = val;
-    document.querySelectorAll('.star-btn').forEach(b => {
+    document.querySelectorAll('.star-btn').forEach(function(b) {
       b.classList.toggle('lit', parseInt(b.dataset.val) <= val);
     });
   }
 
-  /* ─────────────────────────────────────
-     Submit via EmailJS
-  ───────────────────────────────────── */
-  async function submitSurvey() {
-    // ① Star required — shake if missing
+  /* ── Submit ── */
+  function submitSurvey() {
     if (selectedStar === 0) {
-      const row = document.getElementById('starsRow');
-      [6, -6, 4, -4, 0].forEach((x, i) => {
-        setTimeout(() => { row.style.transform = `translateX(${x}px)`; }, i * 60);
+      var row = document.getElementById('starsRow');
+      var steps = [6,-6,4,-4,0];
+      steps.forEach(function(x, i) {
+        setTimeout(function() { row.style.transform = 'translateX('+x+'px)'; }, i*60);
       });
       return;
     }
-
-    // ② Double-submit guard
-    if (_surveySent) return;
-
-    // ③ Rate limiting — prevent spam (30s cooldown)
-    const now = Date.now();
-    if (now - _lastSubmitTime < RATE_LIMIT_MS) {
-      const wait = Math.ceil((RATE_LIMIT_MS - (now - _lastSubmitTime)) / 1000);
-      alert(`Please wait ${wait} seconds before submitting again.`);
+    if (surveySent) return;
+    var now = Date.now();
+    if (now - lastSubmitAt < RATE_MS) {
+      var wait = Math.ceil((RATE_MS - (now - lastSubmitAt)) / 1000);
+      alert('Please wait ' + wait + ' seconds before submitting again.');
       return;
     }
-
-    // ④ Sanitize & validate inputs
-    const rawComment = document.getElementById('surveyComment').value;
-    const comment    = sanitizeText(rawComment);
-    const validErr   = validateSurvey(selectedStar, comment);
-    if (validErr) { alert(validErr); return; }
-
-    // ⑤ Lock UI
-    const btn = document.getElementById('submitBtn');
-    btn.disabled  = true;
+    var comment = sanitize(document.getElementById('surveyComment').value);
+    var btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
     btn.textContent = 'Sending…';
-    _surveySent   = true;
-    _lastSubmitTime = now;
+    surveySent  = true;
+    lastSubmitAt = now;
 
-    const timestamp = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
-    const mins      = Math.round(selectedSecs / 60);
-    const starsStr  = '★'.repeat(selectedStar) + '☆'.repeat(5 - selectedStar);
+    var stars = '';
+    for (var i = 0; i < selectedStar; i++) stars += '★';
+    for (var j = selectedStar; j < 5; j++) stars += '☆';
 
-    const templateParams = {
+    var params = {
       to_email: 'koki74497@gmail.com',
-      rating:   `${starsStr}  (${selectedStar} / 5)`,
-      duration: `${mins} min`,
+      rating:   stars + '  (' + selectedStar + ' / 5)',
+      duration: Math.round(selectedSecs/60) + ' min',
       comment:  comment || '(No comment)',
-      sent_at:  timestamp,
+      sent_at:  new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' })
     };
 
-    try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+    emailjs.send(EJ_SERVICE, EJ_TEMPLATE, params).then(function() {
       document.getElementById('surveyForm').style.display = 'none';
       document.getElementById('surveySent').style.display = 'block';
-    } catch(err) {
-      // Allow retry on failure
-      _surveySent = false;
-      btn.disabled  = false;
+    }).catch(function(err) {
+      surveySent = false;
+      btn.disabled = false;
       btn.textContent = 'Try again';
-      console.error('EmailJS error:', err);
+      console.error(err);
       alert('Failed to send. Please try again.');
-    }
+    });
   }
 
-  /* setInterval fallback (wall-clock based) */
-  let _fallbackInterval = null;
-  function startFallbackInterval() {
-    clearInterval(_fallbackInterval);
-    _fallbackInterval = setInterval(function() {
-      const remaining = Math.round((timerEndTime - Date.now()) / 1000);
-      if (remaining <= 0) {
-        clearInterval(_fallbackInterval);
-        releaseWakeLock();
-        document.getElementById('timerDisplay').textContent = '0:00';
-        updateRing(0);
-        setTimeout(showDone, 700);
-        return;
-      }
-      document.getElementById('timerDisplay').textContent = formatTime(remaining);
-      updateRing(remaining);
-      updateMessage(remaining);
-    }, 500);
-  }
-     Keeps the screen on so the timer stays
-     accurate even when the phone would sleep.
-     (Supported browsers only — fails silently)
-  ───────────────────────────────────── */
-  async function acquireWakeLock() {
-    if (!('wakeLock' in navigator)) return;
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
-    } catch(e) { /* not supported or denied — timer still uses wall-clock */ }
-  }
-
-  function releaseWakeLock() {
-    if (wakeLock) { wakeLock.release(); wakeLock = null; }
-  }
-
-  /* ─────────────────────────────────────
-     Restart
-  ───────────────────────────────────── */
+  /* ── Restart ── */
   function restartApp() {
-    if (timerWorker) { timerWorker.terminate(); timerWorker = null; }
-    clearInterval(_fallbackInterval);
+    clearInterval(tickInterval);
     releaseWakeLock();
     timerEndTime = null;
-    selectTimer(600);
+    selectedSecs = 600;
+    document.querySelectorAll('.timer-option').forEach(function(el) {
+      el.classList.toggle('selected', el.dataset.secs === '600');
+    });
     showScreen('screen-welcome');
   }
 
-  /* ─────────────────────────────────────
-     Bind all event listeners (no inline onclick)
-  ───────────────────────────────────── */
-  document.addEventListener('DOMContentLoaded', function() {
-    // Timer option selection
-    document.querySelectorAll('.timer-option').forEach(function(el) {
-      el.addEventListener('click', function() {
-        selectTimer(parseInt(el.dataset.secs));
+  /* ── Bind events (DOM already loaded since script is at bottom of body) ── */
+  document.querySelectorAll('.timer-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+      selectedSecs = parseInt(el.dataset.secs);
+      document.querySelectorAll('.timer-option').forEach(function(o) {
+        o.classList.toggle('selected', o === el);
       });
-    });
-
-    // Start button
-    document.getElementById('startBtn').addEventListener('click', startTimer);
-
-    // Star rating
-    document.querySelectorAll('.star-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        setStar(parseInt(btn.dataset.val));
-      });
-    });
-
-    // Submit survey
-    document.getElementById('submitBtn').addEventListener('click', submitSurvey);
-
-    // Restart
-    document.getElementById('restartBtn').addEventListener('click', restartApp);
-
-    // Touch scroll lock on non-scrollable screens
-    ['screen-welcome','screen-timer'].forEach(function(id) {
-      document.getElementById(id).addEventListener('touchmove', function(e) {
-        e.preventDefault();
-      }, { passive: false });
     });
   });
+
+  document.getElementById('btnStart').addEventListener('click', startTimer);
+
+  document.querySelectorAll('.star-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { setStar(parseInt(btn.dataset.val)); });
+  });
+
+  document.getElementById('btnSubmit').addEventListener('click', submitSurvey);
+  document.getElementById('btnRestart').addEventListener('click', restartApp);
+
+  ['screen-welcome','screen-timer'].forEach(function(id) {
+    document.getElementById(id).addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+  });
+
+})();
 </script>
 </body>
 </html>
