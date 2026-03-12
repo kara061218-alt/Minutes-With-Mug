@@ -250,7 +250,6 @@
     </div>
 
     <p class="survey-q">Was it a good experience?</p>
-    <p style="font-size:.72rem;color:var(--latte);margin-top:-.8rem;margin-bottom:1.4rem;opacity:.8;">よい体験でしたか？</p>
 
     <div class="stars-row" id="starsRow">
       <button class="star-btn" data-val="1" onclick="setStar(1)">★</button>
@@ -260,17 +259,17 @@
       <button class="star-btn" data-val="5" onclick="setStar(5)">★</button>
     </div>
 
-    <p class="survey-comment-label">感想・改善点 <span style="opacity:.5;font-size:.85em;text-transform:none;letter-spacing:0">(optional)</span></p>
+    <p class="survey-comment-label">Comments &amp; suggestions <span style="opacity:.5;font-size:.85em;text-transform:none;letter-spacing:0">(optional)</span></p>
     <textarea class="survey-textarea" id="surveyComment"
-      placeholder="なんでもお気軽に…" maxlength="500"></textarea>
+      placeholder="Feel free to share anything…" maxlength="500"></textarea>
 
     <div id="surveyForm" style="width:100%">
-      <button class="submit-btn" id="submitBtn" onclick="submitSurvey()">送信する</button>
+      <button class="submit-btn" id="submitBtn" onclick="submitSurvey()">Send feedback</button>
     </div>
 
     <div class="survey-sent" id="surveySent">
       <span class="survey-sent-icon">🌿</span>
-      <p class="survey-sent-msg">ありがとうございます。<br>Your feedback means a lot to us.</p>
+      <p class="survey-sent-msg">Thank you for sharing.<br>Your feedback means a lot to us.</p>
     </div>
 
     <p class="done-stamp">Minutes With Cafe · Farro Nourishing Eatery</p>
@@ -421,7 +420,7 @@
     document.getElementById('surveyForm').style.display = '';
     document.getElementById('surveySent').style.display = 'none';
     document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtn').textContent = '送信する';
+    document.getElementById('submitBtn').textContent = 'Send feedback';
     showScreen('screen-done');
   }
 
@@ -450,17 +449,17 @@
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
-    btn.textContent = '送信中…';
+    btn.textContent = 'Sending…';
 
     const comment = document.getElementById('surveyComment').value.trim();
-    const now = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+    const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
     const mins = Math.round(selectedSecs / 60);
     const stars = '★'.repeat(selectedStar) + '☆'.repeat(5 - selectedStar);
 
     const templateParams = {
       rating:   `${stars}  (${selectedStar} / 5)`,
       duration: `${mins} min`,
-      comment:  comment || '（コメントなし）',
+      comment:  comment || '(No comment)',
       sent_at:  now,
     };
 
@@ -471,8 +470,8 @@
     } catch(err) {
       console.error('EmailJS error:', err);
       btn.disabled = false;
-      btn.textContent = '再試行';
-      alert('送信に失敗しました。\nEmailJS の設定を確認してください。\n\n' + err);
+      btn.textContent = 'Try again';
+      alert('Failed to send. Please check your EmailJS configuration.\n\n' + err);
     }
   }
 
